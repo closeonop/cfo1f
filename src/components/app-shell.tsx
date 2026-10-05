@@ -37,6 +37,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api } from "@/lib/api";
@@ -138,11 +139,11 @@ function ChangePasswordDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="cur">Current password</Label>
-            <Input id="cur" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+            <PasswordInput id="cur" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="new">New password</Label>
-            <Input id="new" type="password" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} required />
+            <PasswordInput id="new" autoComplete="new-password" value={next} onChange={(e) => setNext(e.target.value)} required />
             <p className="text-xs text-muted-foreground">At least 10 characters, with a letter and a number.</p>
           </div>
           <Button type="submit" disabled={busy} className="w-full">

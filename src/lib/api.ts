@@ -63,9 +63,10 @@ export async function api<T = unknown>(path: string, opts: Options = {}): Promis
       method: opts.method ?? "GET",
       credentials: "include",
       headers: {
+        // harmless on GETs, and required by the backend on cookie endpoints (refresh/logout) as a CSRF guard
+        "X-Requested-With": "XMLHttpRequest",
         ...(opts.formData ? {} : opts.body !== undefined ? { "Content-Type": "application/json" } : {}),
         ...(accessToken && !opts.skipAuth ? { Authorization: `Bearer ${accessToken}` } : {}),
-        ...(opts.formData ? { "X-Requested-With": "XMLHttpRequest" } : {}),
       },
       body: opts.formData ?? (opts.body !== undefined ? JSON.stringify(opts.body) : undefined),
     });
