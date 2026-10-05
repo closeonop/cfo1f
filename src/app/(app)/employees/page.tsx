@@ -90,7 +90,6 @@ function toForm(e: Employee, showSalary: boolean): EmployeeForm {
 
 export default function EmployeesPage() {
   const { user, company } = useSession();
-  const { reload } = useAuth();
   const canManage = ["ADMIN", "CFO", "HR"].includes(user.role);
   const canSeeSalary = user.role === "ADMIN" || user.role === "CFO";
 
@@ -246,8 +245,6 @@ export default function EmployeesPage() {
       }
       setFormOpen(false);
       load();
-      // a new employee could be the current user's own record
-      reload();
     } catch (err) {
       setFormError(err instanceof ApiError ? err.message : "Could not save. Please try again.");
     } finally {

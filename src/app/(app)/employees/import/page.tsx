@@ -54,26 +54,34 @@ export default function ImportWizardPage() {
     setFile(f);
     setPreview(null);
     setResult(null);
-    setStep(f ? 2 : 1);
+    setError(null);
+    setStep(1);
+    // reading the file IS the next step — run it straight away so the user
+    // lands on the column check without another click
+    if (f) void runPreview(f, duplicateMode);
   }
 
-  async function mapAndPreview() {
-    if (!file) return;
+  async function runPreview(f: File, mode: string, newMapping?: Record<string, string>) {
     setBusy(true);
     setError(null);
     try {
       const fd = new FormData();
-      fd.append("file", file);
-      fd.append("duplicateMode", duplicateMode);
+      fd.append("file", f);
+      fd.append("duplicateMode", mode);
+      if (newMapping) fd.append("mapping", JSON.stringify(newMapping));
       const res = await api<ImportPreview>("/employees/import/preview", {
         method: "POST",
         formData: fd,
       });
       setPreview(res);
       setMapping(res.mapping);
-      setStep(3);
+      setStep(2);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "The file couldn't be read. Save it as CSV and try again.");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "The file couldn't be read. Save it as CSV (UTF-8) and try again."
+      );
     } finally {
       setBusy(false);
     }
@@ -82,19 +90,7 @@ export default function ImportWizardPage() {
   async function rePreview(newMapping: Record<string, string>) {
     if (!file) return;
     setMapping(newMapping);
-    setBusy(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("duplicateMode", duplicateMode);
-      fd.append("mapping", JSON.stringify(newMapping));
-      const res = await api<ImportPreview>("/employees/import/preview", { method: "POST", formData: fd });
-      setPreview(res);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Preview failed.");
-    } finally {
-      setBusy(false);
-    }
+    await runPreview(file, duplicateMode, newMapping);
   }
 
   async function confirmImport() {
@@ -213,9 +209,12 @@ export default function ImportWizardPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button disabled={!file || busy} onClick={mapAndPreview}>
-              <FileUp aria-hidden="true" /> {busy ? "Reading…" : "Continue"}
-            </Button>
+            {file && (
+              <Button disabled={busy} onClick={() => runPreview(file, duplicateMode)}>
+                <FileUp aria-hidden="true" /> {busy ? "Reading…" : "Read the file again"}
+              </Button>
+            )}
+            {busy && <p className="text-sm text-muted-foreground">Reading your file…</p>}
           </CardContent>
         </Card>
       )}
