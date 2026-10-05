@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
@@ -14,10 +14,16 @@ import { ApiError } from "@/lib/api";
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const auth = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // already signed in (e.g. pressed Back after login)? go straight to the app
+  useEffect(() => {
+    if (auth.status === "authenticated") router.replace("/dashboard");
+  }, [auth.status, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
