@@ -11,6 +11,7 @@ type AuthState =
 
 type AuthMethods = {
   login: (email: string, password: string) => Promise<void>;
+  acceptSession: (session: { accessToken: string; user: User }) => Promise<void>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
   completeTour: (key: string) => Promise<void>;
@@ -21,6 +22,7 @@ type AuthContextValue = AuthState & AuthMethods;
 const AuthContext = createContext<AuthContextValue>({
   status: "loading",
   login: async () => {},
+  acceptSession: async () => {},
   logout: async () => {},
   reload: async () => {},
   completeTour: async () => {},
@@ -46,16 +48,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     reload();
   }, [reload]);
 
+  const acceptSession = useCallback(async (session: { accessToken: string; user: User }) => {
+    setAccessToken(session.accessToken);
+    try {
+      const me = await api<{ user: User; company?: Company }>("/auth/me");
+      if (!me.company) throw new Error("no company");
+      setState({ status: "authenticated", user: session.user, company: me.company });
+    } catch (error) {
+      setAccessToken(null);
+      throw error;
+    }
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
-    const res = await api<{ accessToken: string; user: User }>("/auth/login", {
+    const session = await api<{ accessToken: string; user: User }>("/auth/login", {
       method: "POST",
       body: { email, password },
       skipAuth: true,
     });
-    setAccessToken(res.accessToken);
-    const me = await api<{ user: User; company?: Company }>("/auth/me");
-    setState({ status: "authenticated", user: res.user, company: me.company! });
-  }, []);
+    await acceptSession(session);
+  }, [acceptSession]);
 
   const logout = useCallback(async () => {
     try {
@@ -73,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState(previous => previous.status === "authenticated" && previous.user.id === userId
       ? {...previous, user:{...previous.user, toursCompleted:[...new Set([...(previous.user.toursCompleted??[]),...completed])]}} : previous);
   }, [userId]);
-  return <AuthContext.Provider value={{ ...state, login, logout, reload, completeTour }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ ...state, login, acceptSession, logout, reload, completeTour }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
@@ -86,5 +98,5 @@ export function useSession() {
   if (ctx.status !== "authenticated") {
     throw new Error("useSession used outside an authenticated context");
   }
-  return { status: "authenticated" as const, user: ctx.user, company: ctx.company, login: ctx.login, logout: ctx.logout, reload: ctx.reload, completeTour:ctx.completeTour };
+  return { status: "authenticated" as const, user: ctx.user, company: ctx.company, login: ctx.login, acceptSession: ctx.acceptSession, logout: ctx.logout, reload: ctx.reload, completeTour:ctx.completeTour };
 }

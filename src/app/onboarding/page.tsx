@@ -8,10 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/components/auth-provider";
 import { api, ApiError } from "@/lib/api";
+import type { User } from "@/lib/types";
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { acceptSession } = useAuth();
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,13 +26,13 @@ export default function OnboardingPage() {
     setError(null);
     setBusy(true);
     try {
-      await api("/auth/onboarding", {
+      const session = await api<{ accessToken: string; user: User }>("/auth/onboarding", {
         method: "POST",
         body: { companyName, email, password },
         skipAuth: true,
       });
-      // the refresh cookie is set by the API; reload session and continue
-      await api("/auth/refresh", { method: "POST", skipAuth: true });
+      // Onboarding already returns a session and sets its refresh cookie.
+      await acceptSession(session);
       router.replace("/dashboard");
       router.refresh();
     } catch (err) {

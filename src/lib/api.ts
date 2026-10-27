@@ -2,10 +2,15 @@
 // httpOnly cookie managed by the backend. On a 401 we silently refresh once
 // and retry. The custom header on refresh/logout doubles as a CSRF guard.
 
-// Keep local browser and API on the same hostname so SameSite=Strict refresh cookies work.
-// Hosted deployments should supply NEXT_PUBLIC_API_URL explicitly.
+// Production requests stay on the frontend origin and are rewritten to the API
+// server. This preserves the Strict refresh cookie and avoids attempting to
+// reach port 8080 on a visitor's device.
 export const API_BASE = process.env.NEXT_PUBLIC_API_URL ??
-  (typeof window === "undefined" ? "http://localhost:8080/api" : `${window.location.protocol}//${window.location.hostname}:8080/api`);
+  (typeof window === "undefined"
+    ? "http://localhost:8080/api"
+    : process.env.NODE_ENV === "production"
+      ? "/_backend"
+      : `${window.location.protocol}//${window.location.hostname}:8080/api`);
 
 let accessToken: string | null = null;
 
@@ -29,16 +34,30 @@ export class ApiError extends Error {
 
 let refreshing: Promise<boolean> | null = null;
 
+async function fetchApi(url: string, options: RequestInit, timeoutMs = 15000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch {
+    throw new ApiError(503, controller.signal.aborted
+      ? "The server is taking too long to respond. Please try again shortly."
+      : "Cannot reach the server. Check your connection and try again.");
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export async function refreshSession(): Promise<boolean> {
   if (!refreshing) {
     refreshing = (async () => {
       try {
-        const res = await fetch(`${API_BASE}/auth/refresh`, {
+        const res = await fetchApi(`${API_BASE}/auth/refresh`, {
           method: "POST",
           cache: "no-store",
           credentials: "include",
           headers: { "X-Requested-With": "XMLHttpRequest" },
-        });
+        }, 8000);
         if (!res.ok) return false;
         const data = await res.json();
         accessToken = data.accessToken;
@@ -63,7 +82,7 @@ interface Options {
 
 export async function api<T = unknown>(path: string, opts: Options = {}): Promise<T> {
   const doFetch = () =>
-    fetch(`${API_BASE}${path}`, {
+    fetchApi(`${API_BASE}${path}`, {
       method: opts.method ?? "GET",
       cache: "no-store",
       credentials: "include",

@@ -89,5 +89,10 @@ matrix, research and completed checks. Generated employee credentials open the
 first-login setup wizard. The local API currently enables demo OTP `123456`;
 `DEMO_OTP_ENABLED` defaults to false for other runs. No verification email is sent.
 The default local API URL uses the browser's hostname so refresh cookies work
-when opening either localhost or 127.0.0.1. Set `NEXT_PUBLIC_API_URL` explicitly
-for hosted environments.
+when opening either localhost or 127.0.0.1. Hosted browsers default to `/_backend`.
+On Vercel set `API_INTERNAL_URL=https://<your-backend-host>/api` before building;
+the Next.js rewrite forwards `/_backend/*` to that server. If setting
+`NEXT_PUBLIC_API_URL` in production, use `/_backend`, never localhost or port 8080.
+Login and signup requests time out after 15 seconds with a retryable message;
+startup session checks time out after 8 seconds. Requests are never automatically
+retried after a network failure, because signup may already have reached the API.
