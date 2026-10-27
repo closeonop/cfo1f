@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { api, setAccessToken } from "@/lib/api";
+import { api, setAccessToken, refreshSession } from "@/lib/api";
 import type { Company, User } from "@/lib/types";
 
 type AuthState =
@@ -13,6 +13,7 @@ type AuthMethods = {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   reload: () => Promise<void>;
+  completeTour: (key: string) => Promise<void>;
 };
 
 type AuthContextValue = AuthState & AuthMethods;
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextValue>({
   login: async () => {},
   logout: async () => {},
   reload: async () => {},
+  completeTour: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -30,11 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const reload = useCallback(async () => {
     try {
       // silent refresh: the httpOnly cookie gets us a fresh access token
-      const res = await api<{ accessToken: string }>("/auth/refresh", {
-        method: "POST",
-        skipAuth: true,
-      });
-      setAccessToken(res.accessToken);
+      if (!await refreshSession()) throw new Error("Session expired");
       const me = await api<{ user: User; company?: Company }>("/auth/me");
       if (!me.company) throw new Error("no company");
       setState({ status: "authenticated", user: me.user, company: me.company });
@@ -69,7 +67,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setState({ status: "anonymous" });
   }, []);
 
-  return <AuthContext.Provider value={{ ...state, login, logout, reload }}>{children}</AuthContext.Provider>;
+  const userId = state.status === "authenticated" ? state.user.id : null;
+  const completeTour = useCallback(async (key: string) => {
+    const completed = await api<string[]>(`/user/tours/${encodeURIComponent(key)}/complete`, { method:"POST" });
+    setState(previous => previous.status === "authenticated" && previous.user.id === userId
+      ? {...previous, user:{...previous.user, toursCompleted:[...new Set([...(previous.user.toursCompleted??[]),...completed])]}} : previous);
+  }, [userId]);
+  return <AuthContext.Provider value={{ ...state, login, logout, reload, completeTour }}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
@@ -82,5 +86,5 @@ export function useSession() {
   if (ctx.status !== "authenticated") {
     throw new Error("useSession used outside an authenticated context");
   }
-  return { status: "authenticated" as const, user: ctx.user, company: ctx.company, login: ctx.login, logout: ctx.logout, reload: ctx.reload };
+  return { status: "authenticated" as const, user: ctx.user, company: ctx.company, login: ctx.login, logout: ctx.logout, reload: ctx.reload, completeTour:ctx.completeTour };
 }

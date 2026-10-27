@@ -7,6 +7,7 @@ import { ChevronLeft, Plus, RotateCcw, Trash2, TriangleAlert } from "lucide-reac
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ActionDisclosure } from "@/components/action-disclosure";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
@@ -30,6 +31,8 @@ import { useSession } from "@/components/auth-provider";
 import { api, ApiError } from "@/lib/api";
 import { dateFmt, moneyFmt, pctFmt } from "@/lib/format";
 import type { CompensationView, Employee } from "@/lib/types";
+import { PrivateProfile } from "@/components/private-profile";
+import { PersonnelFiles } from "@/components/personnel-files";
 
 export default function EmployeeProfilePage() {
   const params = useParams<{ id: string }>();
@@ -48,7 +51,8 @@ export default function EmployeeProfilePage() {
 
   const canSeeMoney = user.role === "ADMIN" || user.role === "CFO";
   const isSelf = user.employeeId === id;
-  const canSeeThisComp = isSelf || canSeeMoney;
+  const canSeeThisComp = isSelf || canSeeMoney || (user.role === "HR" && company.hrCanSeeSalary);
+  const canOpenFiles = ["ADMIN", "HR"].includes(user.role) || (user.role === "MANAGER" && employee?.managerId === user.employeeId);
 
   const load = useCallback(() => {
     api<Employee>(`/employees/${id}`)
@@ -97,14 +101,14 @@ export default function EmployeeProfilePage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div data-tour-page="employee-profile" data-tour-ready={!canSeeThisComp || !!comp} className="mx-auto max-w-4xl space-y-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
         <Link href="/employees">
           <ChevronLeft aria-hidden="true" /> Back to employees
         </Link>
       </Button>
 
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header data-tour="page-overview" className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             {employee.firstName} {employee.lastName}
@@ -141,15 +145,18 @@ export default function EmployeeProfilePage() {
         </p>
       )}
 
+      {(user.employeeId === id || ["ADMIN", "HR", "CFO"].includes(user.role)) && <PrivateProfile employeeId={id} />}
+      {canOpenFiles && <PersonnelFiles employeeId={id} />}
+      <ActionDisclosure label="Employee workspaces"><Button asChild variant="outline"><Link href={`/portal/performance?employeeId=${id}`}>Performance &amp; reviews</Link></Button><Button asChild variant="outline"><Link href={`/portal/communication?employeeId=${id}`}>Feedback &amp; 1:1s</Link></Button><Button asChild variant="outline"><Link href={`/portal/development?employeeId=${id}`}>Skills &amp; goals</Link></Button></ActionDisclosure>
       {canSeeThisComp && comp && (
-        <Card>
+        <Card data-tour="pay-components">
           <CardHeader className="flex-row items-center justify-between space-y-0">
             <div className="space-y-1.5">
               <CardTitle className="text-base">Total compensation</CardTitle>
               <CardDescription>Base salary plus variable pay, per month.</CardDescription>
             </div>
             {canSeeMoney && (
-              <Button size="sm" onClick={() => setComponentOpen(true)}>
+              <Button data-tour="add-pay-component" size="sm" onClick={() => setComponentOpen(true)}>
                 <Plus aria-hidden="true" /> Add component
               </Button>
             )}
@@ -158,7 +165,7 @@ export default function EmployeeProfilePage() {
             <div className="rounded-lg border p-4">
               <div className="text-3xl font-semibold tabular">{money(comp.totalMonthly)}</div>
               <div className="mt-1 text-sm text-muted-foreground">
-                base {money(comp.baseSalary)} + variable {money(comp.variableMonthly)}
+                base {money(comp.salaryPeriod === "ANNUAL" && comp.baseSalary != null ? comp.baseSalary / 12 : comp.baseSalary)} + variable {money(comp.variableMonthly)}
                 {comp.oneTimeTotal != null && comp.oneTimeTotal > 0
                   ? ` + one-time ${money(comp.oneTimeTotal)} (not counted monthly)`
                   : ""}
@@ -352,7 +359,7 @@ function ComponentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent data-tour="components-editor">
         <DialogHeader>
           <DialogTitle>Add a pay component</DialogTitle>
           <DialogDescription>Bonus, commission, overtime, allowance… your words.</DialogDescription>
@@ -360,13 +367,13 @@ function ComponentDialog({
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="cname">Name</Label>
-            <Input id="cname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Bonus" required />
+            <Input data-tour="component-name" id="cname" value={name} onChange={(e) => setName(e.target.value)} placeholder="Bonus" required />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="ctype">How it&apos;s calculated</Label>
               <Select value={calcType} onValueChange={setCalcType}>
-                <SelectTrigger id="ctype">
+                <SelectTrigger data-tour="component-type" id="ctype">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -379,7 +386,7 @@ function ComponentDialog({
             <div className="space-y-1.5">
               <Label htmlFor="cperiod">How often</Label>
               <Select value={period} onValueChange={setPeriod}>
-                <SelectTrigger id="cperiod">
+                <SelectTrigger data-tour="component-period" id="cperiod">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -393,7 +400,7 @@ function ComponentDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="cvalue">{calcType === "PERCENT" ? "Percent" : "Amount"}</Label>
-            <Input id="cvalue" inputMode="decimal" className="tabular" value={value} onChange={(e) => setValue(e.target.value)} required />
+            <Input data-tour="component-value" id="cvalue" inputMode="decimal" className="tabular" value={value} onChange={(e) => setValue(e.target.value)} required />
           </div>
           {err && (
             <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -404,7 +411,7 @@ function ComponentDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={busy}>
+            <Button data-tour="component-save" type="submit" disabled={busy}>
               {busy ? "Saving…" : "Add"}
             </Button>
           </DialogFooter>

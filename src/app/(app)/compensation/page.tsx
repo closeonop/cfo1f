@@ -5,7 +5,6 @@ import { ArrowUpDown, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +25,10 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/components/auth-provider";
 import { api, ApiError } from "@/lib/api";
-import { dateFmt, moneyFmt } from "@/lib/format";
+import { FinanceHeader, FinanceMetric } from "@/components/finance-workspace";
+import { ActionDisclosure } from "@/components/action-disclosure";
+import { usePortalSync } from "@/lib/use-portal-sync";
+import { dateFmt, moneyFmt, parseMoneyInput } from "@/lib/format";
 import type { Employee, RaiseSummary, ReportTable, Tier } from "@/lib/types";
 
 export default function CompensationPage() {
@@ -34,6 +36,13 @@ export default function CompensationPage() {
   const money = (v: number | null | undefined) => moneyFmt(v, company.currency, company.locale);
   const canApprove = ["ADMIN", "CFO"].includes(user.role);
 
+  const canSeeSalary = canApprove || company.hrCanSeeSalary;
+  const [group, setGroup] = useState("tier");
+  const [historyFilter, setHistoryFilter] = useState("all");
+  const [loaded,setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [review, setReview] = useState<{raise: RaiseSummary; items: {employeeId:number;name:string;oldSalary:number|null;newSalary:number|null;capped:boolean}[]} | null>(null);
+  const [reviewAction, setReviewAction] = useState<"approve"|"reject"|"cancel"|null>(null);
   const [costByTier, setCostByTier] = useState<ReportTable | null>(null);
   const [costByRole, setCostByRole] = useState<ReportTable | null>(null);
   const [costByTeam, setCostByTeam] = useState<ReportTable | null>(null);
@@ -57,19 +66,28 @@ export default function CompensationPage() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const load = useCallback(() => {
-    api<ReportTable>("/reports/cost-by?group=tier").then(setCostByTier).catch(() => {});
-    api<ReportTable>("/reports/cost-by?group=role").then(setCostByRole).catch(() => {});
-    api<ReportTable>("/reports/cost-by?group=team").then(setCostByTeam).catch(() => {});
-    api<RaiseSummary[]>("/raises").then(setRaises).catch(() => {});
-    api<Tier[]>("/tiers").then(setTiers).catch(() => {});
-    api<Employee[]>("/employees").then(setEmployees).catch(() => {});
-  }, []);
-  useEffect(load, [load]);
+  const load = useCallback(async () => {
+    try {
+      const [history, bands, people] = await Promise.all([api<RaiseSummary[]>("/raises"),api<Tier[]>("/tiers"),api<Employee[]>("/employees")]);
+      setRaises(history);setTiers(bands);setEmployees(people);
+      if (canSeeSalary) {
+        const costs=await Promise.all(["tier","role","team"].map(group => api<ReportTable>(`/reports/cost-by?group=${group}`)));
+        setCostByTier(costs[0]);setCostByRole(costs[1]);setCostByTeam(costs[2]);
+      } else {setCostByTier(null);setCostByRole(null);setCostByTeam(null);}
+      setLoadError("");setLoaded(true);
+    } catch(e) {setLoadError(e instanceof Error ? e.message : "Could not load compensation.");}
+  }, [canSeeSalary]);
+  useEffect(() => {void load();}, [load]);
+  usePortalSync(load,!wizardOpen && !review && !busy);
+  async function openReview(id:number, action:"approve"|"reject"|"cancel"|null) {
+    try {setReview(await api(`/raises/${id}`));setReviewAction(action);setErr(null);}
+    catch(error) {toast.error(error instanceof Error ? error.message : "Could not load raise details.");}
+  }
 
   function resetWizard() {
     setStep(1);
     setWho("tier");
+    setTierId("");
     setPicked([]);
     setRaiseType("percent");
     setPercent("");
@@ -92,13 +110,14 @@ export default function CompensationPage() {
       };
       if (who === "tier") body.tierId = Number(tierId);
       else body.employeeIds = picked;
-      if (raiseType === "percent") body.percent = Number(percent.replace(/,/g, ""));
-      if (raiseType === "fixed") body.fixedAmount = Number(fixed.replace(/,/g, ""));
+      if (raiseType === "percent") body.percent = parseMoneyInput(percent);
+      if (raiseType === "fixed") body.fixedAmount = parseMoneyInput(fixed);
+      if ((raiseType === "percent" ? body.percent : body.fixedAmount) == null) throw new Error("Enter a valid raise amount.");
       const res = await api<import("@/lib/types").RaisePreview>("/raises/preview", { method: "POST", body });
       setPreview(res);
       setStep(2);
     } catch (error) {
-      setErr(error instanceof ApiError ? error.message : "Could not build the preview.");
+      setErr(error instanceof Error ? error.message : "Could not build the preview.");
     } finally {
       setBusy(false);
     }
@@ -114,8 +133,8 @@ export default function CompensationPage() {
       };
       if (who === "tier") body.tierId = Number(tierId);
       else body.employeeIds = picked;
-      if (raiseType === "percent") body.percent = Number(percent.replace(/,/g, ""));
-      if (raiseType === "fixed") body.fixedAmount = Number(fixed.replace(/,/g, ""));
+      if (raiseType === "percent") body.percent = parseMoneyInput(percent);
+      if (raiseType === "fixed") body.fixedAmount = parseMoneyInput(fixed);
       const res = await api<RaiseSummary>("/raises", { method: "POST", body });
       toast.success(
         res.status === "APPLIED"
@@ -135,13 +154,14 @@ export default function CompensationPage() {
   }
 
   async function act(id: number, action: "approve" | "reject" | "cancel") {
+    setBusy(true); setErr(null);
     try {
       await api(`/raises/${id}/${action}`, { method: "POST", body: {} });
       toast.success(action === "approve" ? "Raise approved." : action === "reject" ? "Raise rejected." : "Raise cancelled.");
-      load();
+      setReview(null); await load();
     } catch (error) {
-      toast.error(error instanceof ApiError ? error.message : "Action failed.");
-    }
+      setErr(error instanceof Error ? error.message : "Action failed.");
+    } finally {setBusy(false);}
   }
 
   const costTable = (t: ReportTable | null) =>
@@ -170,113 +190,43 @@ export default function CompensationPage() {
       </Table>
     );
 
+  const currentCost = group === "tier" ? costByTier : group === "role" ? costByRole : costByTeam;
+  const total = (column:number) => costByTier?.rows.reduce((sum,row) => sum+Number(row[column]),0) ?? null;
+  const base=total(2), variable=total(3), monthly=total(4);
+  const filteredRaises=raises.filter(raise => historyFilter === "all" || raise.status === historyFilter);
+  const period=company.salaryPeriod === "ANNUAL" ? "year" : "month";
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Compensation</h1>
-          <p className="text-sm text-muted-foreground">What everyone costs, and the raises you&apos;ve given.</p>
-        </header>
-        <Button size="lg" onClick={() => { resetWizard(); setWizardOpen(true); }}>
-          <Gift aria-hidden="true" /> Give a raise
-        </Button>
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">By tier</CardTitle>
-          </CardHeader>
-          <CardContent>{costTable(costByTier) ?? <Empty />}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">By role</CardTitle>
-          </CardHeader>
-          <CardContent>{costTable(costByRole) ?? <Empty />}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">By team</CardTitle>
-          </CardHeader>
-          <CardContent>{costTable(costByTeam) ?? <Empty />}</CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Raise history</CardTitle>
-          <CardDescription>Everything given or proposed, with its status.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {raises.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No raises yet. Press “Give a raise” to start.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Who</TableHead>
-                  <TableHead>Change</TableHead>
-                  <TableHead>Effective</TableHead>
-                  <TableHead>Reason</TableHead>
-                  <TableHead>Cost impact / month</TableHead>
-                  <TableHead>Status</TableHead>
-                  {canApprove && <TableHead aria-label="Actions" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {raises.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell>{r.scopeNote ?? `${r.itemCount} people`}</TableCell>
-                    <TableCell>{r.percent != null ? `${r.percent}%` : r.fixedAmount != null ? money(r.fixedAmount) : "—"}</TableCell>
-                    <TableCell>{dateFmt(r.effectiveDate, company.locale)}</TableCell>
-                    <TableCell className="max-w-40 truncate text-muted-foreground">{r.reason}</TableCell>
-                    <TableCell className="tabular">{money(r.monthlyDelta)}</TableCell>
-                    <TableCell>
-                      <Badge variant={r.status === "APPLIED" ? "success" : r.status === "PENDING" ? "warning" : r.status === "REJECTED" || r.status === "CANCELLED" ? "destructive" : "default"}>
-                        {r.status}
-                      </Badge>
-                    </TableCell>
-                    {canApprove && (
-                      <TableCell>
-                        {r.status === "PENDING" && (
-                          <span className="flex justify-end gap-1">
-                            <Button size="sm" onClick={() => act(r.id, "approve")}>Approve</Button>
-                            <Button size="sm" variant="outline" onClick={() => act(r.id, "reject")}>Reject</Button>
-                          </span>
-                        )}
-                        {(r.status === "PENDING" || r.status === "APPROVED") && (
-                          <span className="flex justify-end">
-                            <Button size="sm" variant="ghost" onClick={() => act(r.id, "cancel")}>Cancel</Button>
-                          </span>
-                        )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+    <div data-tour-page="compensation" data-tour-ready={loaded && !loadError} className="finance-page">
+      <FinanceHeader section="compensation" title="Pay decisions. A clearer picture." description="Understand recurring people costs, review a raise and keep every decision connected to its history." reports={canApprove} action={<Button data-tour="plan-raise-btn" onClick={() => {resetWizard();setWizardOpen(true);}}><Gift aria-hidden="true" />{canApprove ? "Plan a raise" : "Propose a raise"}</Button>} />
+      {loadError && <div role="alert" className="finance-error">{loadError} <Button variant="outline" size="sm" onClick={() => void load()}>Retry</Button></div>}
+      {canSeeSalary ? <>
+        <section className="finance-metrics" aria-label="Current compensation overview"><FinanceMetric label="Monthly recurring cost" value={money(monthly)} note={`${total(1) ?? "—"} active people · base + recurring variable pay`} accent /><FinanceMetric label="Monthly base" value={money(base)} note={`Normalized from ${company.salaryPeriod.toLowerCase()} base salaries.`} /><FinanceMetric label="Monthly variable" value={money(variable)} note="Current recurring components. One-time pay excluded." /></section>
+        <section className="finance-panel"><div className="finance-toolbar"><div><h2>Where the monthly cost sits.</h2><p className="mt-1 text-sm text-muted-foreground">One shared view, grouped the way you need.</p></div><div><Label htmlFor="cost-group" className="sr-only">Group costs by</Label><select id="cost-group" className="rounded-xl border bg-background px-4 py-3 text-sm" value={group} onChange={e => setGroup(e.target.value)}><option value="tier">By pay band</option><option value="role">By job role</option><option value="team">By team</option></select></div></div>
+          {monthly != null && monthly > 0 && <><div className="finance-allocation" aria-hidden="true"><span style={{width:`${(base ?? 0)/monthly*100}%`}} /><span style={{width:`${(variable ?? 0)/monthly*100}%`}} /></div><p className="mb-4 text-xs text-muted-foreground">Violet: base pay · Lime: recurring variable pay</p></>}
+          {currentCost ? currentCost.rows.length ? costTable(currentCost) : <p className="finance-empty">No active employees to include yet.</p> : <p role="status" className="finance-empty">Loading the cost breakdown…</p>}
+        </section>
+      </> : <section className="finance-panel"><h2>Prepare the proposal. Finance reviews the figures.</h2><p>Your account can propose an increase for selected people. Current salaries and cost totals remain hidden while HR salary access is off.</p></section>}
+      <section data-tour="raise-history" className="finance-panel"><div className="finance-toolbar"><div><h2>Raise decisions &amp; history</h2><p className="mt-1 text-sm text-muted-foreground">{raises.filter(raise => raise.status === "PENDING").length} awaiting Finance · {raises.filter(raise => raise.status === "APPROVED").length} scheduled</p></div><div><Label htmlFor="raise-status" className="sr-only">Filter raise status</Label><select id="raise-status" className="rounded-xl border bg-background px-4 py-3 text-sm" value={historyFilter} onChange={e => setHistoryFilter(e.target.value)}><option value="all">All decisions</option>{["PENDING","APPROVED","APPLIED","REJECTED","CANCELLED"].map(status => <option key={status} value={status}>{status === "PENDING" ? "Awaiting approval" : status === "APPROVED" ? "Scheduled" : status.charAt(0)+status.slice(1).toLowerCase()}</option>)}</select></div></div>
+        {!filteredRaises.length ? <p className="finance-empty mt-5">No raises in this view. Plan a raise to preview its impact.</p> : <div className="mt-5"><Table><TableHeader><TableRow><TableHead>People &amp; reason</TableHead><TableHead>Change / {period}</TableHead><TableHead>Effective</TableHead><TableHead>Monthly impact</TableHead><TableHead>Status</TableHead><TableHead>Details</TableHead></TableRow></TableHeader><TableBody>{filteredRaises.map(raise => <TableRow key={raise.id}><TableCell><strong className="font-medium">{raise.scopeNote ?? `${raise.itemCount} people`}</strong><p className="mt-1 max-w-72 whitespace-normal text-xs text-muted-foreground">{raise.reason}</p></TableCell><TableCell className="tabular">{raise.percent != null ? `${raise.percent}%` : money(raise.fixedAmount)}</TableCell><TableCell>{dateFmt(raise.effectiveDate,company.locale)}</TableCell><TableCell className="tabular">{money(raise.monthlyDelta)}</TableCell><TableCell><Badge variant={raise.status === "APPLIED" ? "success" : raise.status === "PENDING" ? "warning" : "secondary"}>{raise.status === "PENDING" ? "Awaiting approval" : raise.status === "APPROVED" ? "Scheduled" : raise.status.charAt(0)+raise.status.slice(1).toLowerCase()}</Badge></TableCell><TableCell><ActionDisclosure label={`Options for raise ${raise.id}`}><Button variant="outline" size="sm" onClick={() => void openReview(raise.id,null)}>View details</Button>{canApprove && raise.status === "PENDING" && <><Button size="sm" onClick={() => void openReview(raise.id,"approve")}>Review &amp; approve</Button><Button variant="outline" size="sm" onClick={() => void openReview(raise.id,"reject")}>Reject proposal</Button></>}{canApprove && ["PENDING","APPROVED"].includes(raise.status) && <Button variant="ghost" size="sm" onClick={() => void openReview(raise.id,"cancel")}>Cancel raise</Button>}</ActionDisclosure></TableCell></TableRow>)}</TableBody></Table></div>}
+      </section>
+      <p className="text-xs text-muted-foreground">Figures refresh every 30 seconds while this page is visible. Scheduled raises apply on their effective date. These records do not transfer money.</p>
+      <Dialog open={!!review} onOpenChange={open => {if(!open) setReview(null);}}><DialogContent className="sm:max-w-2xl"><DialogHeader><DialogTitle>{reviewAction ? `${reviewAction.charAt(0).toUpperCase()+reviewAction.slice(1)} this raise?` : "Raise details"}</DialogTitle><DialogDescription>{review?.raise.reason} · Effective {dateFmt(review?.raise.effectiveDate,company.locale)}. Monthly impact: {money(review?.raise.monthlyDelta)}.</DialogDescription></DialogHeader><div className="max-h-80 overflow-auto"><Table><TableHeader><TableRow><TableHead>Person</TableHead><TableHead>Old base / {period}</TableHead><TableHead>New base / {period}</TableHead><TableHead>Note</TableHead></TableRow></TableHeader><TableBody>{review?.items.map(item => <TableRow key={item.employeeId}><TableCell>{item.name}</TableCell><TableCell className="tabular">{money(item.oldSalary)}</TableCell><TableCell className="tabular">{money(item.newSalary)}</TableCell><TableCell>{item.capped ? "Band cap applied" : "—"}</TableCell></TableRow>)}</TableBody></Table></div>{reviewAction === "approve" && <p className="text-sm text-muted-foreground">Approval applies the recorded changes now if due, or schedules them for the effective date.</p>}{err && <p className="text-sm text-destructive" role="alert">{err}</p>}<DialogFooter><Button variant="outline" onClick={() => setReview(null)}>Close</Button>{reviewAction && review && <Button disabled={busy} onClick={() => void act(review.raise.id,reviewAction)}>{busy ? "Saving…" : `Confirm ${reviewAction}`}</Button>}</DialogFooter></DialogContent></Dialog>
 
       {/* ---- raise wizard ---- */}
       <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent data-tour="raises-editor" className="sm:max-w-2xl">
           {step === 1 && (
             <>
               <DialogHeader>
-                <DialogTitle>Give a raise — who and how much?</DialogTitle>
-                <DialogDescription>You&apos;ll see exactly what it costs before anything changes.</DialogDescription>
+                <DialogTitle>{canApprove ? "Plan a raise" : "Propose a raise"} — who and how much?</DialogTitle>
+                <DialogDescription>{canSeeSalary ? "Preview the cost before any salary changes." : "Choose people and an increase. Finance reviews pay figures."} Fixed amounts are base pay per {period}.</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="who">Who gets it</Label>
                     <Select value={who} onValueChange={setWho}>
-                      <SelectTrigger id="who"><SelectValue /></SelectTrigger>
+                      <SelectTrigger data-tour="raise-scope" id="who"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="tier">A whole tier</SelectItem>
                         <SelectItem value="people">Selected people</SelectItem>
@@ -318,7 +268,7 @@ export default function CompensationPage() {
                   <div className="space-y-1.5">
                     <Label htmlFor="rtype">Raise by</Label>
                     <Select value={raiseType} onValueChange={setRaiseType}>
-                      <SelectTrigger id="rtype"><SelectValue /></SelectTrigger>
+                      <SelectTrigger data-tour="raise-type" id="rtype"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="percent">Percent (%)</SelectItem>
                         <SelectItem value="fixed">Fixed amount</SelectItem>
@@ -327,16 +277,17 @@ export default function CompensationPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="rval">{raiseType === "percent" ? "Percent" : "Amount"}</Label>
-                    <Input id="rval" inputMode="decimal" className="tabular" value={raiseType === "percent" ? percent : fixed} onChange={(e) => (raiseType === "percent" ? setPercent : setFixed)(e.target.value)} placeholder={raiseType === "percent" ? "10" : "500"} />
+                    <Input data-tour="raise-value" id="rval" inputMode="decimal" className="tabular" value={raiseType === "percent" ? percent : fixed} onChange={(e) => (raiseType === "percent" ? setPercent : setFixed)(e.target.value)} placeholder={raiseType === "percent" ? "10" : "500"} />
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="rdate">Effective from</Label>
-                    <Input id="rdate" type="date" value={effective} onChange={(e) => setEffective(e.target.value)} />
+                    <Input data-tour="raise-date" id="rdate" type="date" value={effective} onChange={(e) => setEffective(e.target.value)} />
                   </div>
                 </div>
+                <div className="space-y-1.5"><Label htmlFor="cap">If a raise exceeds the pay-band maximum</Label><Select value={capPolicy} onValueChange={setCapPolicy}><SelectTrigger data-tour="raise-cap" id="cap"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CAP">Cap at the maximum</SelectItem><SelectItem value="ALLOW">Allow above the maximum</SelectItem></SelectContent></Select></div>
                 <div className="space-y-1.5">
                   <Label htmlFor="rreason">Reason (kept in history)</Label>
-                  <Input id="rreason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Performance review 2026" />
+                  <Input data-tour="raise-reason" id="rreason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Performance review 2026" />
                 </div>
                 {err && (
                   <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -347,8 +298,8 @@ export default function CompensationPage() {
               <DialogFooter>
                 <Button variant="outline" onClick={() => setWizardOpen(false)}>Cancel</Button>
                 <Button
-                  onClick={loadPreview}
-                  disabled={busy || !reason.trim() || (who === "tier" ? !tierId : picked.length === 0) || (!percent && !fixed)}
+                  data-tour="raise-preview" onClick={loadPreview}
+                  disabled={busy || !effective || !reason.trim() || (who === "tier" ? !tierId : picked.length === 0) || !(raiseType === "percent" ? percent.trim() : fixed.trim())}
                 >
                   {busy ? "Calculating…" : "Preview the cost"}
                 </Button>
@@ -361,11 +312,7 @@ export default function CompensationPage() {
               <DialogHeader>
                 <DialogTitle>Check before you confirm</DialogTitle>
                 <DialogDescription>
-                  {preview.affected} {preview.affected === 1 ? "person" : "people"}. Extra cost:{" "}
-                  <span className="font-semibold text-foreground">
-                    {money(preview.monthlyDelta)}/month ({money(preview.annualDelta)}/year)
-                  </span>
-                  . Payroll goes from {money(preview.totalOldMonthly)} to {money(preview.totalNewMonthly)} per month.
+                  {preview.affected} {preview.affected === 1 ? "person" : "people"}. {canSeeSalary ? `Extra cost: ${money(preview.monthlyDelta)}/month (${money(preview.annualDelta)}/year).` : "Pay figures are hidden. Finance will review the amounts."} Band policy: {capPolicy === "CAP" ? "Cap at maximum" : "Allow above maximum"}.
                 </DialogDescription>
               </DialogHeader>
               <div className="max-h-72 overflow-y-auto rounded-md border">
@@ -373,8 +320,8 @@ export default function CompensationPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Person</TableHead>
-                      <TableHead>Old</TableHead>
-                      <TableHead>New</TableHead>
+                      <TableHead>Old base / {period}</TableHead>
+                      <TableHead>New base / {period}</TableHead>
                       <TableHead>Change</TableHead>
                       <TableHead>Note</TableHead>
                     </TableRow>
@@ -385,7 +332,7 @@ export default function CompensationPage() {
                         <TableCell>{it.name}</TableCell>
                         <TableCell className="tabular">{money(it.oldSalary)}</TableCell>
                         <TableCell className="tabular font-medium">{money(it.newSalary)}</TableCell>
-                        <TableCell className="tabular">{money(it.newSalary - it.oldSalary)}</TableCell>
+                        <TableCell className="tabular">{money(it.newSalary == null || it.oldSalary == null ? null : it.newSalary - it.oldSalary)}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
                           {it.tierWarning ? (
                             <span className="flex items-center gap-1 text-warning-foreground"><ArrowUpDown className="h-3 w-3" /> {it.tierWarning}</span>
@@ -401,25 +348,13 @@ export default function CompensationPage() {
                   {preview.warnings.map((w, i) => <li key={i}>• {w}</li>)}
                 </ul>
               )}
-              {preview.items.some((it) => it.tierWarning) && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="cap">If someone goes above their tier maximum</Label>
-                  <Select value={capPolicy} onValueChange={setCapPolicy}>
-                    <SelectTrigger id="cap"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="CAP">Cap them at the maximum</SelectItem>
-                      <SelectItem value="ALLOW">Allow it</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
               {err && (
                 <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>
               )}
               <DialogFooter>
                 <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
                 <Button onClick={confirmRaise} disabled={busy}>
-                  {busy ? "Applying…" : "Confirm — do it"}
+                  {busy ? "Applying…" : canApprove ? "Confirm raise" : "Submit proposal"}
                 </Button>
               </DialogFooter>
             </>
@@ -428,8 +363,4 @@ export default function CompensationPage() {
       </Dialog>
     </div>
   );
-}
-
-function Empty() {
-  return <p className="py-4 text-center text-sm text-muted-foreground">No data yet.</p>;
 }

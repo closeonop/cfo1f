@@ -129,8 +129,8 @@ export default function ImportWizardPage() {
   const steps = ["Choose file", "Check columns", "Preview", "Done"];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
-      <header>
+    <div data-tour-page="employee-import" data-tour-ready={true} className="mx-auto max-w-4xl space-y-6">
+      <header data-tour="page-overview">
         <Button variant="ghost" size="sm" asChild className="-ml-2 mb-2">
           <Link href="/employees">
             <ChevronLeft aria-hidden="true" /> Back to employees
@@ -190,7 +190,7 @@ export default function ImportWizardPage() {
             <div className="space-y-1.5">
               <Label htmlFor="file">Your CSV file</Label>
               <Input
-                id="file"
+                data-tour="import-file" id="file"
                 ref={fileRef}
                 type="file"
                 accept=".csv,text/csv"
@@ -200,7 +200,7 @@ export default function ImportWizardPage() {
             <div className="space-y-1.5">
               <Label htmlFor="dup">If someone is already in the system</Label>
               <Select value={duplicateMode} onValueChange={setDuplicateMode}>
-                <SelectTrigger id="dup" className="w-72">
+                <SelectTrigger data-tour="import-duplicates" id="dup" className="w-72">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -210,7 +210,7 @@ export default function ImportWizardPage() {
               </Select>
             </div>
             {file && (
-              <Button disabled={busy} onClick={() => runPreview(file, duplicateMode)}>
+              <Button data-tour="import-preview" disabled={busy} onClick={() => runPreview(file, duplicateMode)}>
                 <FileUp aria-hidden="true" /> {busy ? "Reading…" : "Read the file again"}
               </Button>
             )}

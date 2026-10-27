@@ -54,7 +54,8 @@ export function pctFmt(value: number | null | undefined): string {
 /** Parses what a human typed into a number: symbols, lakh/crore or thousand grouping, decimal comma. */
 export function parseMoneyInput(raw: string): number | null {
   if (!raw.trim()) return null;
-  let s = raw.replace(/[\p{Sc}\sA-Za-z]/gu, "");
+  let s = raw.replace(/[\p{Sc}\s]/gu, "");
+  if (!/^[+-]?[\d.,]+$/.test(s)) return null;
   const hasComma = s.includes(",");
   const hasDot = s.includes(".");
   if (hasComma && hasDot) {
@@ -67,5 +68,5 @@ export function parseMoneyInput(raw: string): number | null {
     s = decimalComma ? s.replace(",", ".") : s.replace(/,/g, "");
   }
   const n = Number(s);
-  return isNaN(n) ? null : n;
+  return Number.isFinite(n) ? n : null;
 }

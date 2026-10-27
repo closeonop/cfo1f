@@ -19,6 +19,8 @@ describe("parseMoneyInput", () => {
   });
 
   it("rejects non-numbers", () => {
+    expect(parseMoneyInput("500oops")).toBeNull();
+    expect(parseMoneyInput("Infinity")).toBeNull();
     expect(parseMoneyInput("not-a-number")).toBeNull();
     expect(parseMoneyInput("")).toBeNull();
   });

@@ -58,8 +58,8 @@ export default function SettingsPage() {
   if (!form) return <div className="animate-pulse py-10 text-center text-sm text-muted-foreground">Loading…</div>;
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header>
+    <div data-tour-page="settings" data-tour-ready={true} className="mx-auto max-w-3xl space-y-6">
+      <header data-tour="page-overview">
         <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground">How the app works for everyone in {form.name}.</p>
       </header>
@@ -70,7 +70,7 @@ export default function SettingsPage() {
           <CardDescription>These choices shape every money figure and date in the app.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={save} className="space-y-4">
+          <form data-tour="settings-form" onSubmit={save} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="name">Company name</Label>
               <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -103,7 +103,7 @@ export default function SettingsPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="period">Salaries are</Label>
                 <Select value={form.salaryPeriod} onValueChange={(v) => setForm({ ...form, salaryPeriod: v as Company["salaryPeriod"] })}>
-                  <SelectTrigger id="period"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-tour="salary-period" id="period"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="MONTHLY">Monthly amounts</SelectItem>
                     <SelectItem value="ANNUAL">Annual amounts</SelectItem>
@@ -130,7 +130,7 @@ export default function SettingsPage() {
                   value={form.hrCanSeeSalary ? "yes" : "no"}
                   onValueChange={(v) => setForm({ ...form, hrCanSeeSalary: v === "yes" })}
                 >
-                  <SelectTrigger id="hrpay"><SelectValue /></SelectTrigger>
+                  <SelectTrigger data-tour="hr-salary-visibility" id="hrpay"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="no">No — pay stays with Finance</SelectItem>
                     <SelectItem value="yes">Yes — HR needs it for their work</SelectItem>
@@ -144,7 +144,7 @@ export default function SettingsPage() {
                 {err}
               </p>
             )}
-            <Button type="submit" disabled={busy}>
+            <Button data-tour="settings-save" type="submit" disabled={busy}>
               {busy ? "Saving…" : "Save settings"}
             </Button>
           </form>

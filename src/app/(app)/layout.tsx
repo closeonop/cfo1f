@@ -4,6 +4,9 @@ import { useAuth } from "@/components/auth-provider";
 import { AppShell } from "@/components/app-shell";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { TourProvider } from "@/tours/tour-provider";
+import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
+import "@/components/assistant/assistant.css";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
@@ -11,9 +14,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (auth.status === "anonymous") router.replace("/login");
-  }, [auth.status, router]);
+    if (auth.status === "authenticated" && auth.user.welcomeRequired) router.replace("/welcome");
+  }, [auth, router]);
 
-  if (auth.status !== "authenticated") {
+  if (auth.status !== "authenticated" || auth.user.welcomeRequired) {
     return (
       <main className="flex min-h-dvh items-center justify-center">
         <div className="animate-pulse text-sm text-muted-foreground">Loading…</div>
@@ -21,5 +25,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <AppShell>{children}</AppShell>;
+  return <TourProvider><AppShell>{children}</AppShell><AssistantLauncher /></TourProvider>;
 }

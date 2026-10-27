@@ -14,6 +14,7 @@ import { ArrowUpDown, Download, Plus, TriangleAlert, Upload } from "lucide-react
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ActionDisclosure } from "@/components/action-disclosure";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -35,7 +36,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth, useSession } from "@/components/auth-provider";
 import { api, downloadFile, ApiError } from "@/lib/api";
-import { dateFmt, moneyFmt } from "@/lib/format";
+import { dateFmt, moneyFmt, parseMoneyInput } from "@/lib/format";
 import type { Employee, JobRole, Tier } from "@/lib/types";
 
 interface EmployeeForm {
@@ -91,7 +92,8 @@ function toForm(e: Employee, showSalary: boolean): EmployeeForm {
 export default function EmployeesPage() {
   const { user, company } = useSession();
   const canManage = ["ADMIN", "CFO", "HR"].includes(user.role);
-  const canSeeSalary = user.role === "ADMIN" || user.role === "CFO";
+  const canChangeSalary = user.role === "ADMIN" || user.role === "CFO";
+  const canSeeSalary = canChangeSalary || (user.role === "HR" && company.hrCanSeeSalary);
 
   const [employees, setEmployees] = useState<Employee[] | null>(null);
   const [tiers, setTiers] = useState<Tier[]>([]);
@@ -184,7 +186,7 @@ export default function EmployeesPage() {
       }),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canSeeSalary]
+    [canSeeSalary, company.currency, company.locale]
   );
 
   const table = useReactTable({
@@ -205,14 +207,16 @@ export default function EmployeesPage() {
   }
 
   function openEdit(e: Employee) {
+    if (!canManage) return;
     setEditing(e);
-    setForm(toForm(e, canSeeSalary));
+    setForm(toForm(e, canChangeSalary));
     setFormError(null);
     setFormOpen(true);
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.startDate) { setFormError("Enter first name, last name and start date."); return; }
     setSaving(true);
     setFormError(null);
     const body: Record<string, unknown> = {
@@ -229,8 +233,9 @@ export default function EmployeesPage() {
       status: form.status,
     };
     if (form.salary.trim()) {
-      const salary = Number(form.salary.replace(/,/g, ""));
-      if (!isNaN(salary)) {
+      const salary = parseMoneyInput(form.salary);
+      if (salary == null || salary < 0) { setFormError("Enter a valid salary of zero or more."); setSaving(false); return; }
+      if (salary != null) {
         body.salary = salary;
         body.salaryReason = form.salaryReason || (editing ? "Direct salary update" : "Initial salary");
       }
@@ -262,9 +267,9 @@ export default function EmployeesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
+    <div data-tour-page="employees" data-tour-ready={employees != null} className="mx-auto max-w-6xl space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <header>
+        <header data-tour="page-overview">
           <h1 className="text-2xl font-semibold tracking-tight">Employees</h1>
           <p className="text-sm text-muted-foreground">
             {employees == null ? "Loading…" : `${filtered.length} of ${employees.length} people`}
@@ -272,29 +277,26 @@ export default function EmployeesPage() {
         </header>
         {canManage && (
           <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={exportCsv}>
-              <Download aria-hidden="true" /> Export
-            </Button>
-            <Button variant="outline" asChild>
-              <Link href="/employees/import">
-                <Upload aria-hidden="true" /> Import CSV
-              </Link>
-            </Button>
-            <Button onClick={openAdd}>
+            <ActionDisclosure label="Import & export">
+              <Button variant="outline" onClick={exportCsv}><Download aria-hidden="true" />Export CSV</Button>
+              <Button variant="outline" asChild><Link href="/employees/import"><Upload aria-hidden="true" />Import CSV</Link></Button>
+            </ActionDisclosure>
+            <Button data-tour="add-employee-btn" onClick={openAdd}>
               <Plus aria-hidden="true" /> Add employee
             </Button>
           </div>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-start gap-3">
         <Input
           placeholder="Search name, email or code…"
           className="w-56"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          aria-label="Search employees"
+          data-tour="employees-search" aria-label="Search employees"
         />
+        <ActionDisclosure label={`Filters${[tierFilter, teamFilter, statusFilter].filter(v => v !== "all").length ? ` · ${[tierFilter, teamFilter, statusFilter].filter(v => v !== "all").length} active` : ""}`}>
         <Select value={tierFilter} onValueChange={setTierFilter}>
           <SelectTrigger className="w-40" aria-label="Filter by tier">
             <SelectValue placeholder="Tier" />
@@ -332,11 +334,13 @@ export default function EmployeesPage() {
             <SelectItem value="INACTIVE">Inactive</SelectItem>
           </SelectContent>
         </Select>
+        <Button variant="ghost" onClick={() => { setTierFilter("all"); setTeamFilter("all"); setStatusFilter("all"); }}>Clear filters</Button>
+        </ActionDisclosure>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <Table data-tour="employees-list">
             <TableHeader>
               {table.getHeaderGroups().map((hg) => (
                 <TableRow key={hg.id}>
@@ -355,26 +359,27 @@ export default function EmployeesPage() {
                       )}
                     </TableHead>
                   ))}
+                  {canManage && <TableHead>Actions</TableHead>}
                 </TableRow>
               ))}
             </TableHeader>
             <TableBody>
               {employees == null ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="py-10 text-center text-muted-foreground">
+                  <TableCell colSpan={columns.length + (canManage ? 1 : 0)} className="py-10 text-center text-muted-foreground">
                     Loading…
                   </TableCell>
                 </TableRow>
               ) : table.getRowModel().rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="py-10 text-center">
-                    <p className="font-medium">No employees yet.</p>
+                  <TableCell colSpan={columns.length + (canManage ? 1 : 0)} className="py-10 text-center">
+                    <p className="font-medium">{employees.length ? "No matching employees." : "No employees yet."}</p>
                     <p className="text-sm text-muted-foreground">
-                      Add one by hand, or{" "}
-                      <Link href="/employees/import" className="text-primary underline">
+                      {employees.length ? "Try changing your search or filters. " : canManage ? "Add one by hand, or " : "No employee records are visible for your account. "}
+                      {canManage && !employees.length && <><Link href="/employees/import" className="text-primary underline">
                         import a CSV
                       </Link>{" "}
-                      to bring everyone over at once.
+                      to bring everyone over at once.</>}
                     </p>
                   </TableCell>
                 </TableRow>
@@ -386,6 +391,7 @@ export default function EmployeesPage() {
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
+                    {canManage && <TableCell><Button variant="outline" size="sm" aria-label={`Edit ${row.original.firstName} ${row.original.lastName}`} onClick={() => openEdit(row.original)}>Edit</Button></TableCell>}
                   </TableRow>
                 ))
               )}
@@ -395,7 +401,7 @@ export default function EmployeesPage() {
       </Card>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent data-tour="employees-editor" className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit employee" : "Add an employee"}</DialogTitle>
             <DialogDescription>
@@ -407,15 +413,15 @@ export default function EmployeesPage() {
           <form onSubmit={save} className="grid gap-4 sm:grid-cols-2" noValidate>
             <div className="space-y-1.5">
               <Label htmlFor="firstName">First name *</Label>
-              <Input id="firstName" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
+              <Input data-tour="employee-first-name" id="firstName" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="lastName">Last name *</Label>
-              <Input id="lastName" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
+              <Input data-tour="employee-last-name" id="lastName" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input data-tour="employee-email" id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone</Label>
@@ -437,7 +443,7 @@ export default function EmployeesPage() {
             <div className="space-y-1.5">
               <Label htmlFor="jobRoleId">Job role</Label>
               <Select value={form.jobRoleId} onValueChange={(v) => setForm({ ...form, jobRoleId: v })}>
-                <SelectTrigger id="jobRoleId">
+                <SelectTrigger data-tour="employee-job-role" id="jobRoleId">
                   <SelectValue placeholder="Choose…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -469,7 +475,7 @@ export default function EmployeesPage() {
             <div className="space-y-1.5">
               <Label htmlFor="managerId">Manager</Label>
               <Select value={form.managerId} onValueChange={(v) => setForm({ ...form, managerId: v })}>
-                <SelectTrigger id="managerId">
+                <SelectTrigger data-tour="employee-manager" id="managerId">
                   <SelectValue placeholder="Choose…" />
                 </SelectTrigger>
                 <SelectContent>
@@ -486,12 +492,12 @@ export default function EmployeesPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="startDate">Start date *</Label>
-              <Input id="startDate" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} required />
+              <Input data-tour="employee-start-date" id="startDate" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} required />
             </div>
-            {canSeeSalary && (
+            {canChangeSalary && (
               <>
                 <div className="space-y-1.5">
-                  <Label htmlFor="salary">Salary (monthly)</Label>
+                  <Label htmlFor="salary">Salary ({company.salaryPeriod === "ANNUAL" ? "annual" : "monthly"})</Label>
                   <Input
                     id="salary"
                     inputMode="decimal"
@@ -534,7 +540,7 @@ export default function EmployeesPage() {
               <Button type="button" variant="outline" onClick={() => setFormOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button data-tour="employee-save" type="submit" disabled={saving}>
                 {saving ? "Saving…" : editing ? "Save changes" : "Add employee"}
               </Button>
             </DialogFooter>

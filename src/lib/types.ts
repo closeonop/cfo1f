@@ -3,6 +3,9 @@
 export type AccessRole = "ADMIN" | "CFO" | "HR" | "MANAGER" | "EMPLOYEE";
 
 export interface User {
+  toursCompleted: string[];
+  welcomeRequired?: boolean;
+  passwordChangeRequired?: boolean;
   id: number;
   email: string;
   role: AccessRole;
@@ -130,8 +133,8 @@ export interface PreviewItem {
   employeeId: number;
   name: string;
   tier: string | null;
-  oldSalary: number;
-  newSalary: number;
+  oldSalary: number | null;
+  newSalary: number | null;
   percentApplied: number | null;
   capped: boolean;
   tierWarning: string | null;
@@ -141,10 +144,10 @@ export interface PreviewItem {
 export interface RaisePreview {
   items: PreviewItem[];
   affected: number;
-  totalOldMonthly: number;
-  totalNewMonthly: number;
-  monthlyDelta: number;
-  annualDelta: number;
+  totalOldMonthly: number | null;
+  totalNewMonthly: number | null;
+  monthlyDelta: number | null;
+  annualDelta: number | null;
   warnings: string[];
 }
 

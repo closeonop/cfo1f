@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Archive as ArchiveIcon, ArchiveRestore as RestoreIcon, ArrowDown, ArrowUp, Pencil, Plus, UserRoundCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,10 +14,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/components/auth-provider";
 import { api, ApiError } from "@/lib/api";
-import { moneyFmt } from "@/lib/format";
+import { FinanceHeader, FinanceMetric } from "@/components/finance-workspace";
+import { ActionDisclosure } from "@/components/action-disclosure";
+import { usePortalSync } from "@/lib/use-portal-sync";
+import { moneyFmt, parseMoneyInput } from "@/lib/format";
 import type { Employee, Tier, TierStat } from "@/lib/types";
 
 const COLORS = ["#0f766e", "#0369a1", "#7c3aed", "#b45309", "#be123c", "#4d7c0f"];
@@ -27,6 +28,10 @@ export default function TiersPage() {
   const { company, user } = useSession();
   const money = (v: number | null | undefined) => moneyFmt(v, company.currency, company.locale);
   const canManage = ["ADMIN", "CFO"].includes(user.role);
+  const canAssign = ["ADMIN", "CFO", "HR"].includes(user.role);
+  const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [tiers, setTiers] = useState<Tier[] | null>(null);
   const [stats, setStats] = useState<TierStat[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -38,12 +43,14 @@ export default function TiersPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
 
-  const load = useCallback(() => {
-    api<Tier[]>("/tiers?includeArchived=true").then(setTiers).catch(() => toast.error("Could not load tiers."));
-    api<TierStat[]>("/tiers/stats").then(setStats).catch(() => {});
-    api<Employee[]>("/employees").then(setEmployees).catch(() => {});
+  const load = useCallback(async () => {
+    try {
+      const [bands, totals, people] = await Promise.all([api<Tier[]>("/tiers?includeArchived=true"), api<TierStat[]>("/tiers/stats"), api<Employee[]>("/employees")]);
+      setTiers(bands); setStats(totals); setEmployees(people); setLoadError("");
+    } catch { setLoadError("Could not load pay bands. Please try again."); }
   }, []);
-  useEffect(load, [load]);
+  useEffect(() => { void load(); }, [load]);
+  usePortalSync(load, !dialogOpen && !assigning && !busy);
 
   function openAdd() {
     setEditing(null);
@@ -72,11 +79,12 @@ export default function TiersPage() {
     const body = {
       name: form.name,
       description: form.description || null,
-      minSalary: form.min ? Number(form.min.replace(/,/g, "")) : null,
-      maxSalary: form.max ? Number(form.max.replace(/,/g, "")) : null,
+      minSalary: parseMoneyInput(form.min),
+      maxSalary: parseMoneyInput(form.max),
       color: form.color,
     };
     try {
+      if ((form.min.trim() && body.minSalary == null) || (form.max.trim() && body.maxSalary == null)) throw new Error("Enter valid salary amounts.");
       if (editing) {
         await api(`/tiers/${editing.id}`, { method: "PUT", body });
         toast.success("Tier saved.");
@@ -87,7 +95,7 @@ export default function TiersPage() {
       setDialogOpen(false);
       load();
     } catch (error) {
-      setErr(error instanceof ApiError ? error.message : "Could not save.");
+      setErr(error instanceof Error ? error.message : "Could not save.");
     } finally {
       setBusy(false);
     }
@@ -99,7 +107,7 @@ export default function TiersPage() {
       toast.success(t.archived ? "Tier restored." : "Tier archived. People keep their history.");
       load();
     } catch {
-      toast.error("Could not change the tier.");
+      toast.error("Could not change the tier. Check for an existing active tier with this name.");
     }
   }
 
@@ -140,107 +148,48 @@ export default function TiersPage() {
 
   const statFor = (id: number) => stats.find((s) => s.id === id);
 
-  return (
-    <div className="mx-auto max-w-5xl space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Tiers</h1>
-          <p className="text-sm text-muted-foreground">
-            Pay bands for your company. Each tier has a salary range; people sit in exactly one.
-          </p>
-        </header>
-        {canManage && (
-          <Button onClick={openAdd}>
-            <Plus aria-hidden="true" /> New tier
-          </Button>
-        )}
-      </div>
+  const active = (tiers ?? []).filter(t => !t.archived);
+  const activePeople = employees.filter(e => e.status === "ACTIVE");
+  const assigned = activePeople.filter(e => e.tierId != null).length;
+  const filtered = (tiers ?? []).filter(t => (showArchived || !t.archived) && `${t.name} ${t.description ?? ""}`.toLowerCase().includes(search.toLowerCase()));
+  const period = company.salaryPeriod === "ANNUAL" ? "year" : "month";
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tier</TableHead>
-                <TableHead>Salary range</TableHead>
-                <TableHead>People</TableHead>
-                <TableHead>Monthly cost</TableHead>
-                <TableHead>Average pay</TableHead>
-                <TableHead aria-label="Actions" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tiers == null ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
-                    Loading…
-                  </TableCell>
-                </TableRow>
-              ) : tiers.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="py-10 text-center">
-                    <p className="font-medium">No tiers yet.</p>
-                    <p className="text-sm text-muted-foreground">
-                      Create your first tier, e.g. “Tier 1” with a range from 2,000 to 4,000.
-                    </p>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                tiers.map((t, i) => {
-                  const s = statFor(t.id);
-                  return (
-                    <TableRow key={t.id} className={t.archived ? "opacity-60" : ""}>
-                      <TableCell>
-                        <span className="flex items-center gap-2 font-medium">
-                          <span className="h-3 w-3 rounded-full" style={{ background: t.color ?? "#999" }} aria-hidden="true" />
-                          {t.name}
-                          {t.archived && <span className="text-xs text-muted-foreground">(archived)</span>}
-                        </span>
-                        {t.description && <span className="text-xs text-muted-foreground">{t.description}</span>}
-                      </TableCell>
-                      <TableCell className="tabular">
-                        {money(t.minSalary)} – {money(t.maxSalary)}
-                      </TableCell>
-                      <TableCell className="tabular">{s?.headcount ?? 0}</TableCell>
-                      <TableCell className="tabular">{money(s?.totalMonthlyCost)}</TableCell>
-                      <TableCell className="tabular">{money(s?.averageSalary)}</TableCell>
-                      <TableCell>
-                        {canManage && (
-                          <span className="flex justify-end gap-1">
-                            {!t.archived && (
-                              <>
-                                <Button variant="ghost" size="icon" aria-label={`Assign people to ${t.name}`} onClick={() => { setAssigning(t); setSelected([]); }}>
-                                  <UserRoundCheck />
-                                </Button>
-                                <Button variant="ghost" size="icon" aria-label={`Edit ${t.name}`} onClick={() => openEdit(t)}>
-                                  <Pencil />
-                                </Button>
-                                <Button variant="ghost" size="icon" aria-label={`Move ${t.name} up`} disabled={i === 0} onClick={() => move(t, -1)}>
-                                  <ArrowUp />
-                                </Button>
-                                <Button variant="ghost" size="icon" aria-label={`Move ${t.name} down`} disabled={i === tiers.filter((x) => !x.archived).length - 1} onClick={() => move(t, 1)}>
-                                  <ArrowDown />
-                                </Button>
-                              </>
-                            )}
-                            <Button variant="ghost" size="icon" aria-label={t.archived ? `Restore ${t.name}` : `Archive ${t.name}`} onClick={() => archive(t)}>
-                              {t.archived ? <RestoreIcon /> : <ArchiveIcon />}
-                            </Button>
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+  return (
+    <div data-tour-page="tiers" data-tour-ready={tiers != null && !loadError} className="finance-page">
+      <FinanceHeader section="tiers" title="A clear place for every pay band." description="Set the ranges behind fair, consistent pay. Assigning a band never changes an employee’s salary." reports={canManage} action={canManage && <Button data-tour="add-tier-btn" onClick={openAdd}><Plus aria-hidden="true" /> New pay band</Button>} />
+      <section className="finance-metrics" aria-label="Pay band overview">
+        <FinanceMetric label="Active pay bands" value={tiers ? active.length : "—"} note={`Ranges are base pay per ${period}, in ${company.currency}.`} accent />
+        <FinanceMetric label="People assigned" value={tiers ? assigned : "—"} note="Active employees with a pay band, including archived bands." />
+        <FinanceMetric label="Awaiting a band" value={tiers ? activePeople.length - assigned : "—"} note="Active employees without an assigned band." />
+      </section>
+      {loadError && <div role="alert" className="finance-error">{loadError} <Button variant="outline" size="sm" onClick={() => void load()}>Retry</Button></div>}
+      <div className="finance-toolbar"><div className="finance-search"><Label htmlFor="tier-search" className="sr-only">Find a pay band</Label><Input id="tier-search" placeholder="Find a pay band…" value={search} onChange={e => setSearch(e.target.value)} /></div><label className="flex items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} /> Include archived bands</label></div>
+      <section data-tour="tiers-list" className="space-y-4" aria-label="Pay bands">
+        {!tiers ? (loadError ? null : <p role="status" className="finance-empty">Loading pay bands…</p>) : filtered.length === 0 ? <p className="finance-empty">{search || showArchived ? "No pay bands match this view." : "No active pay bands yet. Create a band to get started."}</p> : filtered.map(t => {
+          const stat = statFor(t.id);
+          const index = active.findIndex(band => band.id === t.id);
+          const outside = activePeople.filter(e => e.tierId === t.id && e.salaryOutsideTier).length;
+          return <article key={t.id} className={`pay-band${t.archived ? " archived" : ""}`}>
+            <div className="pay-band-main">
+              <div><div className="pay-band-number"><span className="h-2.5 w-2.5 rounded-full" style={{background:t.color ?? "var(--primary)"}} aria-hidden="true" />{t.archived ? "ARCHIVED" : `BAND ${String(index + 1).padStart(2,"0")}`}</div><h2>{t.name}</h2><p className="mt-2 text-sm text-muted-foreground">{t.description || "Base salary range"}</p></div>
+              <div><div className="pay-band-range tabular"><strong>{t.minSalary == null ? "No minimum" : money(t.minSalary)}</strong><span aria-hidden="true">→</span><strong>{t.maxSalary == null ? "No maximum" : money(t.maxSalary)}</strong></div><div className="pay-band-labels"><span>Minimum / {period}</span><span>Maximum / {period}</span></div></div>
+              <div className="pay-band-count"><strong>{stat?.headcount ?? "—"}</strong><span>active {(stat?.headcount ?? 0) === 1 ? "person" : "people"}</span></div>
+            </div>
+            <footer className="pay-band-footer"><div className="flex flex-wrap gap-x-5 gap-y-2"><span>Monthly base <strong className="tabular">{money(stat?.totalMonthlyCost)}</strong></span><span>Average base / {period} <strong className="tabular">{money(stat?.averageSalary)}</strong></span>{outside > 0 && <span className="text-warning-foreground">{outside} outside range</span>}</div>
+              {canAssign && <ActionDisclosure label={`Actions for ${t.name}`} className="finance-band-actions">
+                {!t.archived && <Button size="sm" variant="outline" disabled={busy} onClick={() => {setAssigning(t);setSelected([]);}}><UserRoundCheck aria-hidden="true" /> Assign people</Button>}
+                {canManage && !t.archived && <><Button size="sm" variant="outline" onClick={() => openEdit(t)}><Pencil aria-hidden="true" /> Edit band</Button><Button size="sm" variant="ghost" disabled={index === 0} onClick={() => void move(t,-1)}><ArrowUp aria-hidden="true" /> Move up</Button><Button size="sm" variant="ghost" disabled={index === active.length - 1} onClick={() => void move(t,1)}><ArrowDown aria-hidden="true" /> Move down</Button></>}
+                {canManage && <Button size="sm" variant="ghost" onClick={() => void archive(t)}>{t.archived ? <RestoreIcon aria-hidden="true" /> : <ArchiveIcon aria-hidden="true" />}{t.archived ? "Restore band" : "Archive band"}</Button>}
+              </ActionDisclosure>}
+            </footer>
+          </article>;
+        })}
+      </section>
+      <p className="text-xs text-muted-foreground">Monthly base excludes variable and one-time pay. Pay figures appear only with salary access. Archived bands retain their people and history.</p>
 
       {/* create / edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent data-tour="tiers-editor">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit tier" : "New tier"}</DialogTitle>
             <DialogDescription>
@@ -250,16 +199,16 @@ export default function TiersPage() {
           <form onSubmit={save} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="tname">Name</Label>
-              <Input id="tname" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+              <Input data-tour="tier-name" id="tname" maxLength={120} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="tmin">Minimum salary</Label>
-                <Input id="tmin" inputMode="decimal" className="tabular" value={form.min} onChange={(e) => setForm({ ...form, min: e.target.value })} />
+                <Label htmlFor="tmin">Minimum base / {period}</Label>
+                <Input data-tour="tier-minimum" id="tmin" inputMode="decimal" className="tabular" value={form.min} onChange={(e) => setForm({ ...form, min: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="tmax">Maximum salary</Label>
-                <Input id="tmax" inputMode="decimal" className="tabular" value={form.max} onChange={(e) => setForm({ ...form, max: e.target.value })} />
+                <Label htmlFor="tmax">Maximum base / {period}</Label>
+                <Input data-tour="tier-maximum" id="tmax" inputMode="decimal" className="tabular" value={form.max} onChange={(e) => setForm({ ...form, max: e.target.value })} />
               </div>
             </div>
             <div className="space-y-1.5">
@@ -291,7 +240,7 @@ export default function TiersPage() {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy}>
+              <Button data-tour="tier-save" type="submit" disabled={busy}>
                 {busy ? "Saving…" : editing ? "Save" : "Create tier"}
               </Button>
             </DialogFooter>

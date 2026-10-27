@@ -1,0 +1,15 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "jsx": "react-jsx",
+    "incremental": false,
+    "outDir": "../artifacts/assistant-check",
+    "rootDir": "../src",
+    "plugins": []
+  },
+  "include": ["../src/lib/assistant/assistant.check.ts"],
+  "exclude": ["../node_modules"]
+}

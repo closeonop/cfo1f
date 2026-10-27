@@ -11,13 +11,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { CalendarClock, History, Users, Wallet } from "lucide-react";
+import { ArrowUpRight, Asterisk, ArrowRight, CalendarClock, History, Users, Wallet } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import type { Dashboard as DashboardData } from "@/lib/types";
-import { dateFmt, moneyFmt, useMoney } from "@/lib/format";
+import { dateFmt, useMoney } from "@/lib/format";
 import { useSession } from "@/components/auth-provider";
 
 const CHANGE_LABELS: Record<string, string> = {
@@ -67,10 +67,14 @@ export default function DashboardPage() {
     .map((t) => ({ name: t.name, people: t.headcount, cost: t.monthlyCost }));
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">{company.name} at a glance.</p>
+    <div data-tour-page="dashboard" data-tour-ready={!!data && !error} className="mx-auto max-w-6xl space-y-6">
+      <header data-tour="page-overview" className="dashboard-intro">
+        <div><span className="eyebrow">The overview / {company.name}</span>
+          <h1 className="page-title">Big picture.<br />People first.</h1>
+          <p className="text-sm opacity-80">Your team, your pay and what’s next. A little clarity for the working day.</p>
+          <Link href="/portal" className="mt-6 inline-flex min-h-11 items-center gap-3 rounded-full bg-[var(--hero-foreground)] px-5 text-sm font-medium text-[var(--hero)]">Open your workspace<ArrowUpRight className="h-4 w-4" aria-hidden="true" /></Link>
+        </div>
+        <div className="orbit-mark" aria-hidden="true"><Asterisk /></div>
       </header>
 
       {error && (
@@ -91,19 +95,19 @@ export default function DashboardPage() {
 
       {data && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Card>
+          <div data-tour="dashboard-summary" className="grid gap-4 sm:grid-cols-2">
+            <Card className="stat-card">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">Total employees</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-semibold tabular">{data.totalEmployees}</div>
+                <div data-stat className="font-semibold tabular">{data.totalEmployees}</div>
                 <p className="text-xs text-muted-foreground">active people</p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="stat-card">
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Total monthly payroll cost
@@ -111,7 +115,7 @@ export default function DashboardPage() {
                 <Wallet className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-semibold tabular">
+                <div data-stat className="font-semibold tabular">
                   {data.totalMonthlyCost != null ? money(data.totalMonthlyCost) : "Hidden"}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -123,9 +127,10 @@ export default function DashboardPage() {
             </Card>
           </div>
 
+          <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Headcount and cost by tier</CardTitle>
+              <CardTitle className="text-base">How your team stacks up</CardTitle>
               <CardDescription>Where your people sit, and what each tier costs each month.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -139,13 +144,14 @@ export default function DashboardPage() {
                   )}
                 </p>
               ) : (
+                <><div className="mb-4 flex gap-4 text-xs text-muted-foreground"><span>● People</span>{data.totalMonthlyCost != null && <span>▧ Monthly cost</span>}</div>
                 <div className="h-64" role="img" aria-label={`Bar chart of headcount and monthly cost per tier. ${tierData.map((t) => `${t.name}: ${t.people} people${t.cost != null ? `, ${money(t.cost)}` : ""}`).join("; ")}`}>
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={tierData} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
                       <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
                       <YAxis yAxisId="people" tickLine={false} axisLine={false} fontSize={12} allowDecimals={false} />
-                      <YAxis yAxisId="cost" orientation="right" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(v) => money(v, { compact: true, decimals: false })} width={80} />
+                      {data.totalMonthlyCost != null && <YAxis yAxisId="cost" orientation="right" tickLine={false} axisLine={false} fontSize={12} tickFormatter={(v) => money(v, { compact: true, decimals: false })} width={80} />}
                       <Tooltip
                         formatter={(value, name) =>
                           name === "cost" ? [money(value as number), "Monthly cost"] : [value, "People"]
@@ -158,10 +164,19 @@ export default function DashboardPage() {
                       )}
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                </div></>
               )}
             </CardContent>
           </Card>
+          <Card><CardHeader><p className="eyebrow text-muted-foreground">Make your next move</p><CardTitle className="text-xl">Straight to it.</CardTitle><CardDescription>The everyday essentials, one click away.</CardDescription></CardHeader>
+            <CardContent>
+              <Link className="quick-link" href="/employees"><span className="flex items-center gap-3"><Users className="h-4 w-4" aria-hidden="true" />Find your people</span><ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+              <Link className="quick-link" href="/attendance"><span className="flex items-center gap-3"><CalendarClock className="h-4 w-4" aria-hidden="true" />Time &amp; attendance</span><ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+              {["ADMIN", "HR", "MANAGER"].includes(user.role) && <Link className="quick-link" href="/approvals">Review approvals<ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>}
+              {["EMPLOYEE", "MANAGER"].includes(user.role) && <Link className="quick-link" href="/my-compensation">Check your pay<ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>}
+              <Link className="quick-link" href="/portal">Explore the portal<ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+            </CardContent>
+          </Card></div>
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card>

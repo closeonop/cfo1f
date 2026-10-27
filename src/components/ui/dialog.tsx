@@ -4,8 +4,14 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTour } from "@/tours/tour-context";
 
-const Dialog = DialogPrimitive.Root;
+function Dialog(props: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const { active } = useTour();
+  // Driver supplies the modal spotlight/focus handling during a walkthrough.
+  // Radix normally hides all outside nodes, including Driver's body-level popover.
+  return <DialogPrimitive.Root {...props} modal={active ? false : props.modal} />;
+}
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
@@ -25,11 +31,19 @@ DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { side?: "center" | "right" }
->(({ className, children, side = "center", ...props }, ref) => (
+>(({ className, children, side = "center", onInteractOutside, onEscapeKeyDown, onOpenAutoFocus, ...props }, ref) => {
+  const {active}=useTour();
+  return (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      onOpenAutoFocus={event=>{if(active)event.preventDefault();else onOpenAutoFocus?.(event);}}
+      onInteractOutside={event=>{
+        if(active && event.target instanceof Element && event.target.closest(".driver-popover, .driver-layer")) event.preventDefault();
+        else onInteractOutside?.(event);
+      }}
+      onEscapeKeyDown={event=>{if(active)event.preventDefault();else onEscapeKeyDown?.(event);}}
       className={cn(
         "fixed z-50 bg-card shadow-lg focus:outline-none",
         side === "center" &&
@@ -40,12 +54,13 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-2 focus:outline-ring focus:outline-offset-2 disabled:pointer-events-none cursor-pointer" aria-label="Close">
+      <DialogPrimitive.Close data-tour="dialog-close" className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-2 focus:outline-ring focus:outline-offset-2 disabled:pointer-events-none cursor-pointer" aria-label="Close">
         <X className="h-4 w-4" />
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>
-));
+  );
+});
 DialogContent.displayName = DialogPrimitive.Content.displayName;
 
 function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {

@@ -1,11 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Pencil, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -23,16 +22,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/components/auth-provider";
-import { api, ApiError } from "@/lib/api";
-import { moneyFmt } from "@/lib/format";
-import type { JobRole, Tier } from "@/lib/types";
+import { api } from "@/lib/api";
+import { FinanceHeader, FinanceMetric } from "@/components/finance-workspace";
+import { ActionDisclosure } from "@/components/action-disclosure";
+import { usePortalSync } from "@/lib/use-portal-sync";
+import { moneyFmt, parseMoneyInput } from "@/lib/format";
+import type { Employee, JobRole, Tier } from "@/lib/types";
 
 export default function RolesPage() {
   const { company, user } = useSession();
   const money = (v: number | null | undefined) => moneyFmt(v, company.currency, company.locale);
   const canManage = ["ADMIN", "CFO", "HR"].includes(user.role);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [search, setSearch] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [roles, setRoles] = useState<JobRole[] | null>(null);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [open, setOpen] = useState(false);
@@ -41,11 +46,21 @@ export default function RolesPage() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const load = useCallback(() => {
-    api<JobRole[]>("/job-roles").then(setRoles).catch(() => toast.error("Could not load roles."));
-    api<Tier[]>("/tiers").then(setTiers).catch(() => {});
+  const load = useCallback(async () => {
+    try {
+      const [jobs, bands, people] = await Promise.all([api<JobRole[]>("/job-roles?includeArchived=true"), api<Tier[]>("/tiers"), api<Employee[]>("/employees")]);
+      setRoles(jobs); setTiers(bands); setEmployees(people); setLoadError("");
+    } catch { setLoadError("Could not load job roles. Please try again."); }
   }, []);
-  useEffect(load, [load]);
+  useEffect(() => { void load(); }, [load]);
+  usePortalSync(load, !open && !busy);
+
+  async function archive(role: JobRole) {
+    setBusy(true);
+    try { await api(`/job-roles/${role.id}/archive`, {method:"POST"}); toast.success(role.archived ? "Role restored." : "Role archived. Existing employee assignments are kept."); await load(); }
+    catch (error) { toast.error(error instanceof Error ? error.message : "Could not update the role."); }
+    finally { setBusy(false); }
+  }
 
   function openAdd() {
     setEditing(null);
@@ -71,12 +86,14 @@ export default function RolesPage() {
     setBusy(true);
     setErr(null);
     const body = {
+      defaultComponents: editing?.defaultComponents ?? null,
       name: form.name,
       defaultTierId: form.defaultTierId === "none" ? null : Number(form.defaultTierId),
-      minSalary: form.min ? Number(form.min.replace(/,/g, "")) : null,
-      maxSalary: form.max ? Number(form.max.replace(/,/g, "")) : null,
+      minSalary: parseMoneyInput(form.min),
+      maxSalary: parseMoneyInput(form.max),
     };
     try {
+      if ((form.min.trim() && body.minSalary == null) || (form.max.trim() && body.maxSalary == null)) throw new Error("Enter valid salary amounts.");
       if (editing) {
         await api(`/job-roles/${editing.id}`, { method: "PUT", body });
         toast.success("Role saved.");
@@ -87,101 +104,34 @@ export default function RolesPage() {
       setOpen(false);
       load();
     } catch (error) {
-      setErr(error instanceof ApiError ? error.message : "Could not save.");
+      setErr(error instanceof Error ? error.message : "Could not save.");
     } finally {
       setBusy(false);
     }
   }
 
+  const active = (roles ?? []).filter(role => !role.archived);
+  const people = employees.filter(employee => employee.status === "ACTIVE");
+  const filtered = (roles ?? []).filter(role => (showArchived || !role.archived) && `${role.name} ${role.defaultTierName ?? ""}`.toLowerCase().includes(search.toLowerCase()));
+  const period = company.salaryPeriod === "ANNUAL" ? "year" : "month";
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <header>
-          <h1 className="text-2xl font-semibold tracking-tight">Job roles</h1>
-          <p className="text-sm text-muted-foreground">
-            What people do — like “Sales Manager”. Optionally give each role a typical tier and pay range.
-          </p>
-        </header>
-        {canManage && (
-          <Button onClick={openAdd}>
-            <Plus aria-hidden="true" /> New role
-          </Button>
-        )}
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Role</TableHead>
-                <TableHead>Typical tier</TableHead>
-                <TableHead>Typical pay range</TableHead>
-                <TableHead aria-label="Actions" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roles == null ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">
-                    Loading…
-                  </TableCell>
-                </TableRow>
-              ) : roles.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="py-10 text-center">
-                    <p className="font-medium">No job roles yet.</p>
-                    <p className="text-sm text-muted-foreground">
-                      Roles are optional — but they make the employee form quicker to fill.
-                    </p>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                roles.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.name}</TableCell>
-                    <TableCell>{r.defaultTierName ?? "—"}</TableCell>
-                    <TableCell className="tabular">
-                      {r.minSalary != null || r.maxSalary != null
-                        ? `${money(r.minSalary)} – ${money(r.maxSalary)}`
-                        : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {canManage && (
-                        <span className="flex justify-end">
-                          <Button variant="ghost" size="icon" aria-label={`Edit ${r.name}`} onClick={() => openEdit(r)}>
-                            <Pencil />
-                          </Button>
-                        </span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Who can do what in this app</CardTitle>
-          <CardDescription>
-            Built-in access roles — Admin, CFO/Finance, HR, Manager, Employee. The server checks this on every
-            action, not just here.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-2 text-sm sm:grid-cols-2">
-          <PermissionBadge role="Admin (you at setup)" text="Everything, including settings and the audit log." />
-          <PermissionBadge role="CFO / Finance" text="Everything money: salaries, tiers, raises, reports." />
-          <PermissionBadge role="HR" text="People records. Sees pay only if the CFO turns that on." />
-          <PermissionBadge role="Manager" text="Their own team's profiles — never pay figures." />
-          <PermissionBadge role="Employee" text="Their own profile and their own pay." />
-        </CardContent>
-      </Card>
+    <div data-tour-page="roles" data-tour-ready={roles != null && !loadError} className="finance-page">
+      <FinanceHeader section="roles" title="Good structure. Clear expectations." description="Define what people do and the pay defaults that help HR set up their profiles. Job roles are separate from account permissions." reports={["ADMIN","CFO"].includes(user.role)} action={canManage && <Button data-tour="add-role-btn" onClick={openAdd}><Plus aria-hidden="true" /> New job role</Button>} />
+      <section className="finance-metrics" aria-label="Job role overview"><FinanceMetric label="Active job roles" value={roles ? active.length : "—"} note="Available when creating or updating an employee." accent /><FinanceMetric label="With a default band" value={roles ? active.filter(role => role.defaultTierId != null).length : "—"} note="Suggestions for HR; each employee can have a different band." /><FinanceMetric label="People without a role" value={roles ? people.filter(employee => !employee.jobRoleId).length : "—"} note="Active employees with no job role assigned." /></section>
+      {loadError && <div className="finance-error" role="alert">{loadError} <Button variant="outline" size="sm" onClick={() => void load()}>Retry</Button></div>}
+      <div className="finance-toolbar"><div className="finance-search"><Label htmlFor="role-search" className="sr-only">Find a job role</Label><Input data-tour="roles-search" id="role-search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Find a role or default band…" /></div><label className="flex items-center gap-2 text-sm text-muted-foreground"><input type="checkbox" checked={showArchived} onChange={e => setShowArchived(e.target.checked)} /> Include archived roles</label></div>
+      <section data-tour="roles-list" className="finance-role-grid" aria-label="Job roles">{!roles ? (loadError ? null : <p className="finance-empty" role="status">Loading roles…</p>) : filtered.length === 0 ? <p className="finance-empty">No roles in this view. Create a role or change your search.</p> : filtered.map(role => <article key={role.id} className="finance-role-card">
+        <div className="flex items-start justify-between gap-3"><h2>{role.name}</h2><Badge variant={role.archived ? "secondary" : "default"}>{role.archived ? "Archived" : "Active"}</Badge></div>
+        <dl><div><dt>Default pay band</dt><dd>{role.defaultTierName ?? "Not set"}{role.defaultTierId && !tiers.some(tier => tier.id === role.defaultTierId) ? " (archived)" : ""}</dd></div><div><dt>Suggested base / {period}</dt><dd className="tabular">{role.minSalary == null && role.maxSalary == null ? "Not set" : `${role.minSalary == null ? "No minimum" : money(role.minSalary)} – ${role.maxSalary == null ? "No maximum" : money(role.maxSalary)}`}</dd></div></dl>
+        <footer><span>{people.filter(employee => employee.jobRoleId === role.id).length} active people</span>{canManage && <ActionDisclosure label={`Actions for ${role.name}`}>
+          {!role.archived && <Button variant="outline" size="sm" onClick={() => openEdit(role)}><Pencil aria-hidden="true" /> Edit role</Button>}
+          <Button variant="ghost" size="sm" disabled={busy} onClick={() => void archive(role)}>{role.archived ? <ArchiveRestore aria-hidden="true" /> : <Archive aria-hidden="true" />}{role.archived ? "Restore role" : "Archive role"}</Button>
+        </ActionDisclosure>}</footer>
+      </article>)}</section>
+      <ActionDisclosure label="How job roles and account permissions differ"><div className="space-y-3 text-sm text-muted-foreground"><p>A job role describes a person’s work. Changing it never grants salary, approval or administration access. Manage sign-in permissions in Accounts &amp; roles.</p><p>Admin and CFO manage pay bands and compensation. HR manages people and job roles, and can propose raises. HR sees pay figures only when salary visibility is enabled. Managers see their team’s permitted records; employees see their own.</p></div></ActionDisclosure>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent data-tour="roles-editor">
           <DialogHeader>
             <DialogTitle>{editing ? "Edit role" : "New job role"}</DialogTitle>
             <DialogDescription>Defaults are suggestions, not rules — each person can differ.</DialogDescription>
@@ -189,12 +139,12 @@ export default function RolesPage() {
           <form onSubmit={save} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="rname">Role name</Label>
-              <Input id="rname" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Software Engineer" required />
+              <Input data-tour="role-name" id="rname" maxLength={120} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Software Engineer" required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="rtier">Typical tier</Label>
               <Select value={form.defaultTierId} onValueChange={(v) => setForm({ ...form, defaultTierId: v })}>
-                <SelectTrigger id="rtier">
+                <SelectTrigger data-tour="role-default-tier" id="rtier">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -207,13 +157,13 @@ export default function RolesPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div data-tour="role-pay-range" className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="rmin">Typical minimum</Label>
+                <Label htmlFor="rmin">Minimum base / {period}</Label>
                 <Input id="rmin" inputMode="decimal" className="tabular" value={form.min} onChange={(e) => setForm({ ...form, min: e.target.value })} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="rmax">Typical maximum</Label>
+                <Label htmlFor="rmax">Maximum base / {period}</Label>
                 <Input id="rmax" inputMode="decimal" className="tabular" value={form.max} onChange={(e) => setForm({ ...form, max: e.target.value })} />
               </div>
             </div>
@@ -226,22 +176,13 @@ export default function RolesPage() {
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={busy}>
+              <Button data-tour="role-save" type="submit" disabled={busy}>
                 {busy ? "Saving…" : editing ? "Save" : "Create role"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function PermissionBadge({ role, text }: { role: string; text: string }) {
-  return (
-    <div className="rounded-lg border p-3">
-      <div className="font-medium">{role}</div>
-      <div className="text-muted-foreground">{text}</div>
     </div>
   );
 }

@@ -2,7 +2,10 @@
 // httpOnly cookie managed by the backend. On a 401 we silently refresh once
 // and retry. The custom header on refresh/logout doubles as a CSRF guard.
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api";
+// Keep local browser and API on the same hostname so SameSite=Strict refresh cookies work.
+// Hosted deployments should supply NEXT_PUBLIC_API_URL explicitly.
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL ??
+  (typeof window === "undefined" ? "http://localhost:8080/api" : `${window.location.protocol}//${window.location.hostname}:8080/api`);
 
 let accessToken: string | null = null;
 
@@ -26,12 +29,13 @@ export class ApiError extends Error {
 
 let refreshing: Promise<boolean> | null = null;
 
-async function tryRefresh(): Promise<boolean> {
+export async function refreshSession(): Promise<boolean> {
   if (!refreshing) {
     refreshing = (async () => {
       try {
         const res = await fetch(`${API_BASE}/auth/refresh`, {
           method: "POST",
+          cache: "no-store",
           credentials: "include",
           headers: { "X-Requested-With": "XMLHttpRequest" },
         });
@@ -61,6 +65,7 @@ export async function api<T = unknown>(path: string, opts: Options = {}): Promis
   const doFetch = () =>
     fetch(`${API_BASE}${path}`, {
       method: opts.method ?? "GET",
+      cache: "no-store",
       credentials: "include",
       headers: {
         // harmless on GETs, and required by the backend on cookie endpoints (refresh/logout) as a CSRF guard
@@ -73,7 +78,7 @@ export async function api<T = unknown>(path: string, opts: Options = {}): Promis
 
   let res = await doFetch();
   if (res.status === 401 && !opts.skipAuth) {
-    if (await tryRefresh()) {
+    if (await refreshSession()) {
       res = await doFetch();
     }
   }

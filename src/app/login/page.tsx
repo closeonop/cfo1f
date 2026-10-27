@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowUpRight, ArrowRight, Asterisk, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
@@ -22,8 +22,8 @@ export default function LoginPage() {
 
   // already signed in (e.g. pressed Back after login)? go straight to the app
   useEffect(() => {
-    if (auth.status === "authenticated") router.replace("/dashboard");
-  }, [auth.status, router]);
+    if (auth.status === "authenticated") router.replace(auth.user.welcomeRequired ? "/welcome" : "/portal");
+  }, [auth, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,7 +31,7 @@ export default function LoginPage() {
     setBusy(true);
     try {
       await login(email, password);
-      router.replace("/dashboard");
+      // The authenticated-state effect chooses setup or the portal.
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not sign in. Please try again.");
     } finally {
@@ -40,20 +40,17 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-dvh items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M3 17l6-6 4 4 8-8" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M14 7h7v7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <CardTitle className="text-xl">Welcome back</CardTitle>
-          <CardDescription>Sign in to manage your people and pay.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+    <main className="login-layout">
+      <section className="login-story" aria-labelledby="login-headline">
+        <div className="flex items-center gap-3 text-lg font-semibold tracking-tight"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--highlight)] text-[var(--highlight-foreground)]"><Asterisk aria-hidden="true" /></span>People &amp; Pay</div>
+        <div><div className="eyebrow mt-8 text-sidebar-primary">Your people. Your pace.</div><h1 id="login-headline">Good work.<br /><em>Great people.</em></h1><p>People, pay and all the moments in between. A clearer space to make work happen.</p></div>
+        <div className="login-art orbit-mark" aria-hidden="true"><Asterisk /></div>
+        <footer className="flex items-center justify-between gap-4 border-t border-sidebar-border pt-5 text-xs text-sidebar-foreground/70"><span>Less admin. More human.</span><ArrowUpRight className="h-4 w-4" aria-hidden="true" /></footer>
+      </section>
+      <section className="login-form-panel" aria-labelledby="sign-in-title">
+      <div>
+        <div className="mb-10"><span className="eyebrow text-muted-foreground">Your workspace awaits</span><h2 id="sign-in-title" className="mt-3 font-semibold">Hey, welcome back.</h2><p className="mt-3 text-sm text-muted-foreground">Sign in and pick up where you left off.</p></div>
+          <form onSubmit={onSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -83,9 +80,9 @@ export default function LoginPage() {
               </p>
             )}
             <Button type="submit" className="w-full" size="lg" disabled={busy}>
-              {busy ? "Signing in…" : "Sign in"}
+              {busy ? "Signing in…" : "Let’s get to work"}<ArrowRight aria-hidden="true" />
             </Button>
-            <div className="flex justify-between text-sm">
+            <div className="flex flex-wrap justify-between gap-4 text-sm">
               <Link href="/forgot-password" className="text-primary underline-offset-4 hover:underline">
                 Forgot password?
               </Link>
@@ -94,8 +91,9 @@ export default function LoginPage() {
               </Link>
             </div>
           </form>
-        </CardContent>
-      </Card>
+        <p className="mt-10 flex items-center gap-2 border-t pt-5 text-xs text-muted-foreground"><Layers className="h-4 w-4" aria-hidden="true" />One workspace for your working world.</p>
+      </div>
+      </section>
     </main>
   );
 }

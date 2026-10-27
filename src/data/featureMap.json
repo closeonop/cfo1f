@@ -1,0 +1,2096 @@
+[
+  {
+    "id": "dashboard",
+    "name": "Dashboard",
+    "route": "/dashboard",
+    "description": "Summary within your permitted scope",
+    "keywords": [
+      "dashboard",
+      "overview",
+      "summary",
+      "home",
+      "homepage",
+      "statistics",
+      "what is happening"
+    ],
+    "steps": [
+      "Open Dashboard",
+      "Review employee totals and permitted pay summaries",
+      "Open your workspace for tasks and requests"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ]
+  },
+  {
+    "id": "employees",
+    "name": "Employee directory",
+    "route": "/employees",
+    "description": "Find visible employees; HR/Admin/Finance can maintain profiles",
+    "keywords": [
+      "employee",
+      "employees",
+      "directory",
+      "staff",
+      "people",
+      "employee directory",
+      "colleague",
+      "coworker",
+      "team directory",
+      "contact details",
+      "search employee"
+    ],
+    "steps": [
+      "Open Employees",
+      "Search or filter the visible directory",
+      "Open an employee for their permitted profile details"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employees",
+        "Choose Add employee",
+        "Enter names, email, job role, manager and start date; set permitted pay fields",
+        "Save the employee"
+      ],
+      "CFO": [
+        "Open Employees",
+        "Choose Add employee",
+        "Enter names, email, job role, manager and start date; set permitted pay fields",
+        "Save the employee"
+      ],
+      "HR": [
+        "Open Employees",
+        "Choose Add employee",
+        "Enter names, email, job role, manager and start date; set permitted pay fields",
+        "Save the employee"
+      ]
+    }
+  },
+  {
+    "id": "employee-profile",
+    "name": "Employee profiles",
+    "route": "/employees",
+    "description": "Reporting line, permitted pay components, private details and personnel files",
+    "keywords": [
+      "employee profile",
+      "personnel files",
+      "pay component",
+      "bonus",
+      "commission",
+      "employee profiles",
+      "documents",
+      "files",
+      "employee details",
+      "employment details"
+    ],
+    "steps": [
+      "Open Employees",
+      "Choose an employee",
+      "Open the profile section permitted for your role; private-file access is audited"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ]
+  },
+  {
+    "id": "employee-import",
+    "name": "Employee CSV import",
+    "route": "/employees/import",
+    "description": "Preview employee changes before committing a CSV",
+    "keywords": [
+      "import",
+      "csv",
+      "bulk upload",
+      "employee csv import",
+      "spreadsheet upload",
+      "upload employees",
+      "import staff"
+    ],
+    "steps": [
+      "Open Employees then Import",
+      "Download the template and choose a CSV",
+      "Map columns and choose the duplicate policy",
+      "Preview and correct errors before confirming the import"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR"
+    ]
+  },
+  {
+    "id": "portal",
+    "name": "Employee portal",
+    "route": "/portal",
+    "description": "Role-aware tasks, interviews, requests and workspaces",
+    "keywords": [
+      "portal",
+      "workspace",
+      "next steps",
+      "employee portal",
+      "what can i do",
+      "how does this website work",
+      "portal features",
+      "website help",
+      "getting started",
+      "what is this portal"
+    ],
+    "steps": [
+      "Open Employee portal",
+      "Review your next steps",
+      "Choose a workspace and its section"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ]
+  },
+  {
+    "id": "roles",
+    "name": "Job roles",
+    "route": "/roles",
+    "description": "Job titles and suggested pay defaults; not account access",
+    "keywords": [
+      "job role",
+      "job roles",
+      "add role",
+      "position",
+      "job title",
+      "roles",
+      "role",
+      "designation",
+      "job position",
+      "create role"
+    ],
+    "steps": [
+      "Expand People & finance and open Roles",
+      "Choose New job role",
+      "Enter the role name and optional suggested pay band/range",
+      "Save; the role appears in the list"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR"
+    ]
+  },
+  {
+    "id": "tiers",
+    "name": "Pay bands",
+    "route": "/tiers",
+    "description": "Maintain salary bands and assignments",
+    "keywords": [
+      "tier",
+      "tiers",
+      "pay band",
+      "pay bands",
+      "salary range",
+      "salary band",
+      "grade",
+      "pay grade",
+      "salary bracket"
+    ],
+    "steps": [
+      "Expand People & finance and open Tiers",
+      "Review each band and its permitted totals",
+      "Use the Actions arrow for options available to your role"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR"
+    ]
+  },
+  {
+    "id": "compensation",
+    "name": "Compensation and raises",
+    "route": "/compensation",
+    "description": "Plan increases and review decisions; HR proposes, Finance approves",
+    "keywords": [
+      "compensation",
+      "raise",
+      "increase",
+      "salary change",
+      "compensation and raises",
+      "salary hike",
+      "increment",
+      "increase salary",
+      "propose raise",
+      "approve raise"
+    ],
+    "steps": [
+      "Open People & finance then Compensation",
+      "Choose Plan raise or Propose raise",
+      "Choose people or a band, increase, effective date, cap policy and reason",
+      "Preview; authorized Finance/Admin reviewers confirm the decision"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR"
+    ]
+  },
+  {
+    "id": "reports",
+    "name": "Finance reports",
+    "route": "/reports",
+    "description": "Read and export permitted pay reports",
+    "keywords": [
+      "report",
+      "reports",
+      "payroll",
+      "export salary",
+      "cost report",
+      "finance reports",
+      "payroll report",
+      "monthly cost",
+      "download report",
+      "export report"
+    ],
+    "steps": [
+      "Open People & finance then Reports",
+      "Choose the report and any date filters",
+      "Review the results and choose Export CSV"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO"
+    ]
+  },
+  {
+    "id": "accounts",
+    "name": "Accounts and permissions",
+    "route": "/accounts",
+    "description": "Issue sign-ins and manage login access",
+    "keywords": [
+      "account",
+      "accounts",
+      "permission",
+      "permissions",
+      "admin role",
+      "login id",
+      "create login",
+      "sign in",
+      "accounts and permissions",
+      "user access",
+      "invite employee",
+      "new login",
+      "login credentials",
+      "access rights"
+    ],
+    "steps": [
+      "Open Administration then Accounts & roles",
+      "Choose New account",
+      "Enter email, select account permissions and link the employee",
+      "Save and securely share the generated credentials once"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO"
+    ]
+  },
+  {
+    "id": "audit",
+    "name": "Audit log",
+    "route": "/audit",
+    "description": "Read recorded actions without editing them",
+    "keywords": [
+      "audit",
+      "audit log",
+      "who changed",
+      "activity log",
+      "change log",
+      "history of changes"
+    ],
+    "steps": [
+      "Open Administration then Audit log",
+      "Filter by an exact action when needed",
+      "Review actor, time and reference; use pagination"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "HR"
+    ]
+  },
+  {
+    "id": "settings",
+    "name": "Company settings",
+    "route": "/settings",
+    "description": "Company formatting and salary visibility defaults",
+    "keywords": [
+      "settings",
+      "currency",
+      "rounding",
+      "salary visibility",
+      "company name",
+      "company settings",
+      "company preferences",
+      "money format",
+      "hide salary"
+    ],
+    "steps": [
+      "Open Administration then Settings",
+      "Review company name, currency, locale and salary-period defaults",
+      "Change only intended options and choose Save"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO"
+    ]
+  },
+  {
+    "id": "my-pay",
+    "name": "My pay",
+    "route": "/my-compensation",
+    "description": "My pay shows your recorded monthly base plus variable compensation and pay-change history; it does not confirm a bank transfer or generate payslips",
+    "keywords": [
+      "my pay",
+      "my salary",
+      "payslip",
+      "pay history",
+      "pay",
+      "salary",
+      "payment",
+      "payout",
+      "wages",
+      "monthly payment",
+      "this month salary",
+      "paycheck",
+      "pay cheque",
+      "earnings",
+      "compensation breakdown",
+      "how much am i paid"
+    ],
+    "steps": [
+      "Open My pay from Your workspace",
+      "Read Your monthly pay and the base plus variable breakdown",
+      "Check Your pay history for changes and effective dates; ask HR or Finance about actual payment dates or deductions"
+    ],
+    "allowedRoles": [
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "personal-details",
+    "name": "Personal details",
+    "route": "/portal/profile",
+    "description": "Your protected profile; corrections use self-service and Finance",
+    "keywords": [
+      "personal details",
+      "bank details",
+      "bank account",
+      "address",
+      "phone number",
+      "my profile",
+      "personal information",
+      "update bank",
+      "change bank",
+      "payment details",
+      "account number"
+    ],
+    "steps": [
+      "Open Employee portal then Personal details",
+      "Reveal your own saved details when needed; account numbers are masked",
+      "Request contact corrections through Profile changes and payment corrections through Finance"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "attendance-start",
+    "name": "Start attendance",
+    "route": "/attendance",
+    "description": "Start a server-timed work session",
+    "keywords": [
+      "attendance",
+      "start work",
+      "clock in",
+      "check in",
+      "mark attendance",
+      "working hours",
+      "start attendance",
+      "checkin",
+      "clockin",
+      "punch in",
+      "begin work",
+      "start day",
+      "working time",
+      "track hours",
+      "attendence",
+      "attandence"
+    ],
+    "steps": [
+      "Open Time & attendance",
+      "Choose your assigned task or General work",
+      "Describe your focus",
+      "Choose Start work & mark attendance"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "attendance-finish",
+    "name": "Finish or switch work",
+    "route": "/attendance",
+    "description": "Save a work summary/outcome and stop or switch the timer",
+    "keywords": [
+      "finish work",
+      "clock out",
+      "check out",
+      "logging off",
+      "log off",
+      "switch work",
+      "stop timer",
+      "finish or switch work",
+      "checkout",
+      "clockout",
+      "punch out",
+      "end day",
+      "end work",
+      "logout work",
+      "stop work",
+      "change task"
+    ],
+    "steps": [
+      "Open Time & attendance",
+      "Choose Finish work or Switch work",
+      "Summarize the work and choose In progress, Completed or Blocked",
+      "Save to finish; switching also asks for your next task and focus"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "attendance-week",
+    "name": "Submit your week",
+    "route": "/attendance",
+    "description": "Submit recorded hours after finishing sessions",
+    "keywords": [
+      "timesheet",
+      "submit week",
+      "weekly hours",
+      "week actions",
+      "submit your week",
+      "weekly submission",
+      "submit hours",
+      "week total",
+      "send timesheet"
+    ],
+    "steps": [
+      "Open Time & attendance and choose the week",
+      "Finish any running work session",
+      "Expand Week actions and choose Submit my week",
+      "Check your hours and confirm; locked weeks require a correction request"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "attendance-export",
+    "name": "Attendance reporting",
+    "route": "/attendance",
+    "description": "Company attendance totals and approved hours export",
+    "keywords": [
+      "attendance export",
+      "approved hours",
+      "attendance totals",
+      "attendance reporting",
+      "team attendance",
+      "staff hours",
+      "team hours",
+      "download attendance"
+    ],
+    "steps": [
+      "Open Time & attendance",
+      "Choose the week and employee filter",
+      "Expand Week actions and choose Export approved hours"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "HR",
+      "CFO"
+    ]
+  },
+  {
+    "id": "approvals",
+    "name": "Approvals and reminders",
+    "route": "/approvals",
+    "description": "Review requests/timesheets in your scope; no self-approval",
+    "keywords": [
+      "approval",
+      "approvals",
+      "approve leave",
+      "review timesheet",
+      "pending request",
+      "reject request",
+      "approvals and reminders",
+      "approve request",
+      "pending leave",
+      "who requested leave",
+      "requests to approve",
+      "reminder",
+      "notification"
+    ],
+    "steps": [
+      "Open Approvals",
+      "Review the pending request or submitted timesheet",
+      "Choose Approve or Reject and enter a reply or reason",
+      "Confirm your decision; you cannot approve your own request"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "HR",
+      "MANAGER"
+    ]
+  },
+  {
+    "id": "complaint",
+    "name": "Raise a workplace concern",
+    "route": "/portal/self-service?module=help-request",
+    "description": "Use HR help desk for a workplace complaint; this chat does not collect details",
+    "keywords": [
+      "complaint",
+      "complain",
+      "harassment",
+      "grievance",
+      "raise concern",
+      "workplace concern",
+      "raise a workplace concern",
+      "report problem",
+      "workplace issue",
+      "raise issue",
+      "report misconduct",
+      "grievances"
+    ],
+    "steps": [
+      "Open Employee portal then Self service",
+      "Select HR help desk and choose Add HR help desk",
+      "Choose Workplace and enter the concern in that protected form",
+      "Save and follow the reply in your request"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "hr-conversation",
+    "name": "Request a private conversation with HR",
+    "route": "/portal/self-service?module=help-request",
+    "description": "Request an HR conversation through the existing help desk; no automatic calendar booking",
+    "keywords": [
+      "speak to a person",
+      "talk to hr",
+      "speak to hr",
+      "human",
+      "sensitive",
+      "private conversation",
+      "book meeting",
+      "book 1:1 with hr",
+      "meet hr",
+      "request a private conversation with hr",
+      "contact hr",
+      "contant hr",
+      "reach hr",
+      "hr appointment",
+      "talk human",
+      "speak hr",
+      "meet with hr"
+    ],
+    "steps": [
+      "Open Employee portal then Self service",
+      "Select HR help desk and choose Add HR help desk",
+      "Request a private conversation with HR in the protected form",
+      "Save; HR replies to arrange the conversation"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "tour-replay",
+    "name": "Replay a page walkthrough",
+    "route": "/portal",
+    "description": "Restart the guided tour for the current page",
+    "keywords": [
+      "tour",
+      "walkthrough",
+      "guided tour",
+      "help menu",
+      "replay a page walkthrough",
+      "tutorial",
+      "guide",
+      "walk through",
+      "replay tour",
+      "help again"
+    ],
+    "steps": [
+      "Open the page you want to learn",
+      "Open your profile menu in the top corner",
+      "Choose Take the tour again"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ]
+  },
+  {
+    "id": "change-password",
+    "name": "Change your password",
+    "route": "/portal",
+    "description": "Account owner changes their own password through the existing form",
+    "keywords": [
+      "change password",
+      "new password",
+      "password reset",
+      "change your password",
+      "reset password",
+      "update password",
+      "forgot password",
+      "forgotten password",
+      "login password",
+      "password change",
+      "reset login"
+    ],
+    "steps": [
+      "Open your profile menu",
+      "Choose Change password",
+      "Enter your current password and the new password confirmation",
+      "Save the change yourself"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ]
+  },
+  {
+    "id": "portal-job-posting",
+    "name": "Job postings",
+    "route": "/portal/hiring?module=job-posting",
+    "description": "Describe an opening before adding candidates.",
+    "keywords": [
+      "job postings",
+      "job posting",
+      "vacancy",
+      "job opening",
+      "recruitment",
+      "post job",
+      "hire staff"
+    ],
+    "steps": [
+      "Open Employee portal then Hiring",
+      "Select Job postings",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "HR",
+      "MANAGER"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Hiring",
+        "Select Job postings and choose Add when available",
+        "Complete Job title, Position, Description, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Hiring",
+        "Select Job postings and choose Add when available",
+        "Complete Job title, Position, Description, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-candidate",
+    "name": "Candidates",
+    "route": "/portal/hiring?module=candidate",
+    "description": "Move candidates through screening, interviews and offers.",
+    "keywords": [
+      "candidates",
+      "candidate",
+      "applicant",
+      "application",
+      "resume",
+      "cv",
+      "hiring pipeline"
+    ],
+    "steps": [
+      "Open Employee portal then Hiring",
+      "Select Candidates",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "HR",
+      "MANAGER"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Hiring",
+        "Select Candidates and choose Add when available",
+        "Complete Candidate name, Email, Job posting, Stage, Notes",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Hiring",
+        "Select Candidates and choose Add when available",
+        "Complete Candidate name, Email, Job posting, Stage, Notes",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-interview",
+    "name": "Interviews",
+    "route": "/portal/hiring?module=interview",
+    "description": "Assign an interviewer and time, then record evidence after the conversation.",
+    "keywords": [
+      "interviews",
+      "interview",
+      "interview schedule",
+      "who to interview",
+      "assigned interview",
+      "interview feedback"
+    ],
+    "steps": [
+      "Open Employee portal then Hiring",
+      "Select Interviews",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "HR",
+      "MANAGER"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Hiring",
+        "Select Interviews and choose Add when available",
+        "Complete Interview title, Candidate, Interview date, Interviewer, Start time, Interview status, Score (0-5), Interview notes",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Hiring",
+        "Select Interviews and choose Add when available",
+        "Complete Interview title, Candidate, Interview date, Interviewer, Start time, Interview status, Score (0-5), Interview notes",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-onboarding",
+    "name": "Onboarding checklist",
+    "route": "/portal/hiring?module=onboarding",
+    "description": "Assign the first weeks of work to a new hire or their manager.",
+    "keywords": [
+      "onboarding checklist",
+      "onboarding",
+      "new joiner",
+      "joining checklist",
+      "onboard employee"
+    ],
+    "steps": [
+      "Open Employee portal then Hiring",
+      "Select Onboarding checklist",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Hiring",
+        "Select Onboarding checklist and choose Add when available",
+        "Choose a permitted employee and complete Checklist item, Responsible person, Due date, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Hiring",
+        "Select Onboarding checklist and choose Add when available",
+        "Choose a permitted employee and complete Checklist item, Responsible person, Due date, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Hiring",
+        "Select Onboarding checklist",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-metric",
+    "name": "Position metrics",
+    "route": "/portal/performance?module=metric",
+    "description": "Define what good performance means for each position.",
+    "keywords": [
+      "position metrics",
+      "metric",
+      "performance criteria",
+      "kpi",
+      "performance target"
+    ],
+    "steps": [
+      "Open Employee portal then Performance",
+      "Select Position metrics",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Performance",
+        "Select Position metrics and choose Add when available",
+        "Complete Metric name, Position, Unit, Target, Better when",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-metric-value",
+    "name": "Metric values",
+    "route": "/portal/performance?module=metric-value",
+    "description": "Record dated evidence against the employee's position metrics.",
+    "keywords": [
+      "metric values",
+      "metric value",
+      "measurement",
+      "actual result",
+      "record performance"
+    ],
+    "steps": [
+      "Open Employee portal then Performance",
+      "Select Metric values",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Performance",
+        "Select Metric values and choose Add when available",
+        "Choose a permitted employee and complete Evidence summary, Metric, Measured on, Value, Evidence",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Performance",
+        "Select Metric values and choose Add when available",
+        "Choose a permitted employee and complete Evidence summary, Metric, Measured on, Value, Evidence",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Performance",
+        "Select Metric values",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-review",
+    "name": "Performance reviews",
+    "route": "/portal/performance?module=review",
+    "description": "Schedule a review, then score only the position's metrics.",
+    "keywords": [
+      "performance reviews",
+      "review",
+      "appraisal",
+      "performance rating",
+      "my performance",
+      "review score"
+    ],
+    "steps": [
+      "Open Employee portal then Performance",
+      "Select Performance reviews",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Performance",
+        "Select Performance reviews and choose Add when available",
+        "Choose a permitted employee and complete Review name, Review due, Status, Metric scores, Review comments",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Performance",
+        "Select Performance reviews and choose Add when available",
+        "Choose a permitted employee and complete Review name, Review due, Status, Metric scores, Review comments",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Performance",
+        "Select Performance reviews",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-meeting",
+    "name": "1:1 meetings",
+    "route": "/portal/communication?module=meeting",
+    "description": "Record expectations and a two-way conversation.",
+    "keywords": [
+      "1:1 meetings",
+      "meeting",
+      "1:1",
+      "one to one",
+      "meetings",
+      "one on one",
+      "scheduled meeting",
+      "manager meeting",
+      "meeting notes"
+    ],
+    "steps": [
+      "Open Employee portal then Communication",
+      "Select 1:1 meetings",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Communication",
+        "Select 1:1 meetings and choose Add when available",
+        "Choose a permitted employee and complete Meeting title, Meeting date, Expectations, Why this matters, Feedback",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Communication",
+        "Select 1:1 meetings and choose Add when available",
+        "Choose a permitted employee and complete Meeting title, Meeting date, Expectations, Why this matters, Feedback",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Communication",
+        "Select 1:1 meetings",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-feedback",
+    "name": "Feedback",
+    "route": "/portal/communication?module=feedback",
+    "description": "Give positive or constructive feedback; employees can reply.",
+    "keywords": [
+      "feedback",
+      "give feedback",
+      "employee response",
+      "respond feedback"
+    ],
+    "steps": [
+      "Open Employee portal then Communication",
+      "Select Feedback",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Communication",
+        "Select Feedback and choose Add when available",
+        "Choose a permitted employee and complete Feedback summary, Feedback type, Date, Feedback",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Communication",
+        "Select Feedback and choose Add when available",
+        "Choose a permitted employee and complete Feedback summary, Feedback type, Date, Feedback",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Communication",
+        "Select Feedback",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-skill",
+    "name": "Skills",
+    "route": "/portal/development?module=skill",
+    "description": "Keep an employee skills profile and team overview.",
+    "keywords": [
+      "skills",
+      "skill",
+      "abilities",
+      "competency",
+      "expertise"
+    ],
+    "steps": [
+      "Open Employee portal then Development",
+      "Select Skills",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Development",
+        "Select Skills and choose Add when available",
+        "Choose a permitted employee and complete Skill, Level",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Development",
+        "Select Skills and choose Add when available",
+        "Choose a permitted employee and complete Skill, Level",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Development",
+        "Select Skills and choose Add when available",
+        "Choose a permitted employee and complete Skill, Level",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Development",
+        "Select Skills and choose Add when available",
+        "Choose a permitted employee and complete Skill, Level",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Development",
+        "Select Skills and choose Add when available",
+        "Choose a permitted employee and complete Skill, Level",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-goal",
+    "name": "Development goals",
+    "route": "/portal/development?module=goal",
+    "description": "Agree a goal, due date and visible progress.",
+    "keywords": [
+      "development goals",
+      "goal",
+      "career goal",
+      "learning goal",
+      "growth target",
+      "development plan"
+    ],
+    "steps": [
+      "Open Employee portal then Development",
+      "Select Development goals",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Development",
+        "Select Development goals and choose Add when available",
+        "Choose a permitted employee and complete Goal, Due date, Progress (%), Success criteria",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Development",
+        "Select Development goals and choose Add when available",
+        "Choose a permitted employee and complete Goal, Due date, Progress (%), Success criteria",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Development",
+        "Select Development goals and choose Add when available",
+        "Choose a permitted employee and complete Goal, Due date, Progress (%), Success criteria",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Development",
+        "Select Development goals and choose Add when available",
+        "Choose a permitted employee and complete Goal, Due date, Progress (%), Success criteria",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Development",
+        "Select Development goals and choose Add when available",
+        "Choose a permitted employee and complete Goal, Due date, Progress (%), Success criteria",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-training",
+    "name": "Training items",
+    "route": "/portal/development?module=training",
+    "description": "Add a course, mentoring or a project to a goal.",
+    "keywords": [
+      "training items",
+      "training",
+      "course",
+      "learning",
+      "workshop"
+    ],
+    "steps": [
+      "Open Employee portal then Development",
+      "Select Training items",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Development",
+        "Select Training items and choose Add when available",
+        "Choose a permitted employee and complete Training item, Goal, Type, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Development",
+        "Select Training items and choose Add when available",
+        "Choose a permitted employee and complete Training item, Goal, Type, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Development",
+        "Select Training items and choose Add when available",
+        "Choose a permitted employee and complete Training item, Goal, Type, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Development",
+        "Select Training items and choose Add when available",
+        "Choose a permitted employee and complete Training item, Goal, Type, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Development",
+        "Select Training items and choose Add when available",
+        "Choose a permitted employee and complete Training item, Goal, Type, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-development-request",
+    "name": "Development requests",
+    "route": "/portal/development?module=development-request",
+    "description": "Request an opportunity for manager approval.",
+    "keywords": [
+      "development requests",
+      "development request",
+      "training request",
+      "request course",
+      "request training",
+      "learning request"
+    ],
+    "steps": [
+      "Open Employee portal then Development",
+      "Select Development requests",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Development",
+        "Select Development requests and choose Add when available",
+        "Choose a permitted employee and complete Opportunity, How it helps, Requested by",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Development",
+        "Select Development requests and choose Add when available",
+        "Choose a permitted employee and complete Opportunity, How it helps, Requested by",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Development",
+        "Select Development requests and choose Add when available",
+        "Choose a permitted employee and complete Opportunity, How it helps, Requested by",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Development",
+        "Select Development requests and choose Add when available",
+        "Choose a permitted employee and complete Opportunity, How it helps, Requested by",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Development",
+        "Select Development requests and choose Add when available",
+        "Choose a permitted employee and complete Opportunity, How it helps, Requested by",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-recognition",
+    "name": "Recognition",
+    "route": "/portal/rewards?module=recognition",
+    "description": "Recognize an employee's contribution.",
+    "keywords": [
+      "recognition",
+      "appreciation",
+      "shoutout",
+      "praise",
+      "recognise contribution"
+    ],
+    "steps": [
+      "Open Employee portal then Rewards",
+      "Select Recognition",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Rewards",
+        "Select Recognition and choose Add when available",
+        "Choose a permitted employee and complete Recognition, Date, Contribution",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Rewards",
+        "Select Recognition and choose Add when available",
+        "Choose a permitted employee and complete Recognition, Date, Contribution",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Rewards",
+        "Select Recognition",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-reward",
+    "name": "Reward records",
+    "route": "/portal/rewards?module=reward",
+    "description": "Link bonuses, raises, promotions or awards to performance evidence. Pay changes use Compensation.",
+    "keywords": [
+      "reward records",
+      "reward",
+      "rewards",
+      "award",
+      "promotion",
+      "incentive",
+      "my reward",
+      "view reward"
+    ],
+    "steps": [
+      "Open Employee portal then Rewards",
+      "Select Reward records",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Rewards",
+        "Select Reward records and choose Add when available",
+        "Choose a permitted employee and complete Reward, Type, Performance review, Date, Reward details",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Rewards",
+        "Select Reward records and choose Add when available",
+        "Choose a permitted employee and complete Reward, Type, Performance review, Date, Reward details",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Rewards",
+        "Select Reward records and choose Add when available",
+        "Choose a permitted employee and complete Reward, Type, Performance review, Date, Reward details",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Rewards",
+        "Select Reward records",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-discipline-step",
+    "name": "Discipline policy",
+    "route": "/portal/discipline?module=discipline-step",
+    "description": "Define ordered progressive steps before recording an action.",
+    "keywords": [
+      "discipline policy",
+      "discipline step",
+      "disciplinary policy",
+      "warning policy",
+      "progressive discipline"
+    ],
+    "steps": [
+      "Open Employee portal then Discipline",
+      "Select Discipline policy",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Discipline",
+        "Select Discipline policy and choose Add when available",
+        "Complete Policy step, Step order, Policy / rule",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-discipline",
+    "name": "Disciplinary actions",
+    "route": "/portal/discipline?module=discipline",
+    "description": "Document evidence, the employee's side and support offered.",
+    "keywords": [
+      "disciplinary actions",
+      "discipline",
+      "warning",
+      "misconduct action",
+      "disciplinary record"
+    ],
+    "steps": [
+      "Open Employee portal then Discipline",
+      "Select Disciplinary actions",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Discipline",
+        "Select Disciplinary actions and choose Add when available",
+        "Choose a permitted employee and complete Incident category, Policy step, Incident date, Reason, Policy violated, Evidence, Employee's side, Support offered",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Discipline",
+        "Select Disciplinary actions and choose Add when available",
+        "Choose a permitted employee and complete Incident category, Policy step, Incident date, Reason, Policy violated, Evidence, Employee's side, Support offered",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Discipline",
+        "Select Disciplinary actions",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-project",
+    "name": "Projects",
+    "route": "/portal/work?module=project",
+    "description": "Define a project before assigning tasks.",
+    "keywords": [
+      "projects",
+      "project",
+      "project status",
+      "project deadline"
+    ],
+    "steps": [
+      "Open Employee portal then Work",
+      "Select Projects",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Work",
+        "Select Projects and choose Add when available",
+        "Complete Project name, Purpose, Due date, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Work",
+        "Select Projects and choose Add when available",
+        "Complete Project name, Purpose, Due date, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Work",
+        "Select Projects and choose Add when available",
+        "Complete Project name, Purpose, Due date, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-task",
+    "name": "Tasks",
+    "route": "/portal/work?module=task",
+    "description": "Assign work with a due date, purpose and downstream impact.",
+    "keywords": [
+      "tasks",
+      "task",
+      "work assignment",
+      "assigned work",
+      "todo",
+      "to do",
+      "work progress",
+      "task status",
+      "complete task"
+    ],
+    "steps": [
+      "Open Employee portal then Work",
+      "Select Tasks",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Work",
+        "Select Tasks and choose Add when available",
+        "Choose a permitted employee and complete Task, Project, Due date, Why this matters, Impact if delayed, Depends on task, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Work",
+        "Select Tasks and choose Add when available",
+        "Choose a permitted employee and complete Task, Project, Due date, Why this matters, Impact if delayed, Depends on task, Status",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Work",
+        "Select Tasks",
+        "Open a visible record, or use Add if available for your reporting scope",
+        "Review or complete the permitted fields and save only intended changes"
+      ]
+    }
+  },
+  {
+    "id": "portal-leave-balance",
+    "name": "Leave balances",
+    "route": "/portal/leave?module=leave-balance",
+    "description": "Set an employee's annual allowance. Approved requests consume weekdays.",
+    "keywords": [
+      "leave balances",
+      "leave balance",
+      "remaining leave",
+      "leave left",
+      "days available",
+      "leave allowance"
+    ],
+    "steps": [
+      "Open Employee portal then Leave",
+      "Select Leave balances",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Leave",
+        "Select Leave balances and choose Add when available",
+        "Choose a permitted employee and complete Leave type, Year, Allowance (days)",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Leave",
+        "Select Leave balances and choose Add when available",
+        "Choose a permitted employee and complete Leave type, Year, Allowance (days)",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-leave-request",
+    "name": "Leave requests",
+    "route": "/portal/leave?module=leave-request",
+    "description": "Request working days off and route them for approval.",
+    "keywords": [
+      "leave requests",
+      "leave request",
+      "leave",
+      "time off",
+      "holiday",
+      "vacation",
+      "request leave",
+      "apply leave",
+      "ask leave",
+      "sick leave",
+      "annual leave",
+      "day off",
+      "leave status",
+      "cancel leave"
+    ],
+    "steps": [
+      "Open Employee portal then Leave",
+      "Select Leave requests",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Leave",
+        "Select Leave requests and choose Add when available",
+        "Choose a permitted employee and complete Leave type, First day, Last day, Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Leave",
+        "Select Leave requests and choose Add when available",
+        "Choose a permitted employee and complete Leave type, First day, Last day, Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Leave",
+        "Select Leave requests and choose Add when available",
+        "Choose a permitted employee and complete Leave type, First day, Last day, Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Leave",
+        "Select Leave requests and choose Add when available",
+        "Choose a permitted employee and complete Leave type, First day, Last day, Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Leave",
+        "Select Leave requests and choose Add when available",
+        "Choose a permitted employee and complete Leave type, First day, Last day, Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-profile-request",
+    "name": "Profile changes",
+    "route": "/portal/self-service?module=profile-request",
+    "description": "Request a contact detail update; HR reviews it before saving.",
+    "keywords": [
+      "profile changes",
+      "profile request",
+      "profile change",
+      "contact correction",
+      "change email",
+      "update phone",
+      "change contact",
+      "correct profile"
+    ],
+    "steps": [
+      "Open Employee portal then Self service",
+      "Select Profile changes",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Self service",
+        "Select Profile changes and choose Add when available",
+        "Choose a permitted employee and complete Change summary, New phone, New email",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Self service",
+        "Select Profile changes and choose Add when available",
+        "Choose a permitted employee and complete Change summary, New phone, New email",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Self service",
+        "Select Profile changes and choose Add when available",
+        "Choose a permitted employee and complete Change summary, New phone, New email",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Self service",
+        "Select Profile changes and choose Add when available",
+        "Choose a permitted employee and complete Change summary, New phone, New email",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Self service",
+        "Select Profile changes and choose Add when available",
+        "Choose a permitted employee and complete Change summary, New phone, New email",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-attendance-request",
+    "name": "Time corrections",
+    "route": "/portal/self-service?module=attendance-request",
+    "description": "Missed a check-in or check-out? Request a correction in the company time zone. A manager or HR reviews it.",
+    "keywords": [
+      "time corrections",
+      "attendance request",
+      "missed clock in",
+      "time correction",
+      "correct attendance",
+      "forgot clock in",
+      "forgot clock out",
+      "missing attendance",
+      "missed checkout",
+      "fix hours",
+      "attendance correction"
+    ],
+    "steps": [
+      "Open Employee portal then Self service",
+      "Select Time corrections",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Self service",
+        "Select Time corrections and choose Add when available",
+        "Choose a permitted employee and complete Correction summary, Existing session ID (leave blank for missing time), Correct start (company time), Correct finish (company time), Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Self service",
+        "Select Time corrections and choose Add when available",
+        "Choose a permitted employee and complete Correction summary, Existing session ID (leave blank for missing time), Correct start (company time), Correct finish (company time), Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Self service",
+        "Select Time corrections and choose Add when available",
+        "Choose a permitted employee and complete Correction summary, Existing session ID (leave blank for missing time), Correct start (company time), Correct finish (company time), Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Self service",
+        "Select Time corrections and choose Add when available",
+        "Choose a permitted employee and complete Correction summary, Existing session ID (leave blank for missing time), Correct start (company time), Correct finish (company time), Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Self service",
+        "Select Time corrections and choose Add when available",
+        "Choose a permitted employee and complete Correction summary, Existing session ID (leave blank for missing time), Correct start (company time), Correct finish (company time), Reason",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-policy",
+    "name": "Company policies",
+    "route": "/portal/self-service?module=policy",
+    "description": "Publish company policies and collect read acknowledgements.",
+    "keywords": [
+      "company policies",
+      "policy",
+      "policies",
+      "handbook",
+      "company rules",
+      "leave policy",
+      "read policy",
+      "acknowledge policy"
+    ],
+    "steps": [
+      "Open Employee portal then Self service",
+      "Select Company policies",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Self service",
+        "Select Company policies and choose Add when available",
+        "Complete Policy name, Policy text",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Self service",
+        "Select Company policies and choose Add when available",
+        "Complete Policy name, Policy text",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-help-request",
+    "name": "HR help desk",
+    "route": "/portal/self-service?module=help-request",
+    "description": "Ask HR for help and keep the reply with your request.",
+    "keywords": [
+      "hr help desk",
+      "help request",
+      "help desk",
+      "hr help",
+      "support ticket",
+      "ask hr",
+      "hr request",
+      "helpdesk",
+      "request status",
+      "hr reply"
+    ],
+    "steps": [
+      "Open Employee portal then Self service",
+      "Select HR help desk",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Self service",
+        "Select HR help desk and choose Add when available",
+        "Choose a permitted employee and complete Subject, Category, Request",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "CFO": [
+        "Open Employee portal then Self service",
+        "Select HR help desk and choose Add when available",
+        "Choose a permitted employee and complete Subject, Category, Request",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "HR": [
+        "Open Employee portal then Self service",
+        "Select HR help desk and choose Add when available",
+        "Choose a permitted employee and complete Subject, Category, Request",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "MANAGER": [
+        "Open Employee portal then Self service",
+        "Select HR help desk and choose Add when available",
+        "Choose a permitted employee and complete Subject, Category, Request",
+        "Save; use each record’s actions for permitted next steps"
+      ],
+      "EMPLOYEE": [
+        "Open Employee portal then Self service",
+        "Select HR help desk and choose Add when available",
+        "Choose a permitted employee and complete Subject, Category, Request",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "portal-hr-settings",
+    "name": "HR settings",
+    "route": "/portal/administration?module=hr-settings",
+    "description": "Set attendance expectations, reminder periods and retention.",
+    "keywords": [
+      "hr settings",
+      "timezone",
+      "time zone",
+      "expected hours",
+      "retention",
+      "reminder settings"
+    ],
+    "steps": [
+      "Open Employee portal then Administration",
+      "Select HR settings",
+      "Open a permitted record to review details and available actions"
+    ],
+    "allowedRoles": [
+      "ADMIN"
+    ],
+    "stepsByRole": {
+      "ADMIN": [
+        "Open Employee portal then Administration",
+        "Select HR settings and choose Add when available",
+        "Complete Configuration name, Company time zone, Expected weekly hours, Workday starts, Feedback reminder after (days), HR record retention (days)",
+        "Save; use each record’s actions for permitted next steps"
+      ]
+    }
+  },
+  {
+    "id": "earn-rewards",
+    "name": "How rewards work",
+    "route": "/portal/rewards?module=reward",
+    "description": "HR, Finance or an authorized manager records rewards linked to performance; this portal has no automatic reward claim or guaranteed eligibility",
+    "keywords": [
+      "get rewards",
+      "earn rewards",
+      "receive reward",
+      "how rewards work",
+      "qualify reward",
+      "reward eligibility",
+      "how can i get rewards"
+    ],
+    "steps": [
+      "Open Employee portal then Rewards and select Reward records to review rewards visible to you",
+      "Review your performance and goals with your manager to discuss recognition or a reward",
+      "Recorded rewards do not automatically change salary; authorized pay changes use Compensation"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ]
+  },
+  {
+    "id": "contact-manager",
+    "name": "Find your manager",
+    "route": "/employees",
+    "description": "The employee directory shows reporting lines and available work contact details; this portal has no direct chat with your manager",
+    "keywords": [
+      "manager",
+      "contact manager",
+      "contant manager",
+      "reach manager",
+      "talk manager",
+      "speak manager",
+      "message manager",
+      "reporting manager",
+      "who is my manager",
+      "team lead",
+      "supervisor",
+      "supervisor contact",
+      "manager contact details",
+      "supervisor details"
+    ],
+    "steps": [
+      "Open Employees and find your own record to see the Manager or reports-to name",
+      "Search for that manager in your visible directory and open their profile for available email or phone details",
+      "Use your company work channels; if the manager or contact is unavailable, ask HR through the HR help desk"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ]
+  },
+  {
+    "id": "my-pay-staff",
+    "name": "Your own pay details",
+    "route": "/employees",
+    "description": "Your employee profile shows the recorded monthly compensation and pay changes you are permitted to view; it does not confirm a bank transfer",
+    "keywords": [
+      "my pay",
+      "my salary",
+      "payslip",
+      "pay history",
+      "pay",
+      "salary",
+      "payment",
+      "payout",
+      "wages",
+      "monthly payment",
+      "this month salary",
+      "paycheck",
+      "pay cheque",
+      "earnings",
+      "compensation breakdown",
+      "how much am i paid"
+    ],
+    "steps": [
+      "Open Employees and choose your own employee record",
+      "Review the compensation breakdown and recorded pay changes",
+      "Ask Finance through the HR help desk about payslips, deductions, payment dates or missing transfers"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR"
+    ],
+    "requiresEmployee": true
+  },
+  {
+    "id": "payment-status",
+    "name": "Ask about a salary payment",
+    "route": "/portal/self-service?module=help-request",
+    "description": "The portal shows recorded compensation, but does not track bank-transfer status, guarantee payment dates or generate payslips",
+    "keywords": [
+      "payment status",
+      "payout status",
+      "bank transfer",
+      "salary not credited",
+      "salary late",
+      "missing payment",
+      "payment date",
+      "when will i get paid",
+      "when salary paid",
+      "download payslip",
+      "net pay",
+      "take home pay",
+      "salary deduction"
+    ],
+    "steps": [
+      "Check your monthly compensation in your permitted pay view",
+      "Open Employee portal then Self service and select HR help desk",
+      "Create a request asking HR or Finance to confirm the payment; enter any private details only in that protected form"
+    ],
+    "allowedRoles": [
+      "ADMIN",
+      "CFO",
+      "HR",
+      "MANAGER",
+      "EMPLOYEE"
+    ],
+    "requiresEmployee": true
+  }
+]

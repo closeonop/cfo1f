@@ -23,8 +23,8 @@ export default function MyCompensationPage() {
   }, [user.employeeId]);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <header>
+    <div data-tour-page="my-pay" data-tour-ready={!!comp && !err} className="mx-auto max-w-3xl space-y-6">
+      <header data-tour="page-overview">
         <h1 className="text-2xl font-semibold tracking-tight">My pay</h1>
         <p className="text-sm text-muted-foreground">Only you and Finance can see this page.</p>
       </header>
@@ -44,7 +44,7 @@ export default function MyCompensationPage() {
         <Skeleton className="h-48" />
       ) : (
         <>
-          <Card>
+          <Card data-tour="my-pay-summary">
             <CardHeader>
               <CardTitle className="text-base">Your monthly pay</CardTitle>
               <CardDescription>Base salary plus anything variable.</CardDescription>
@@ -58,7 +58,7 @@ export default function MyCompensationPage() {
           </Card>
 
           {comp.history.length > 0 && (
-            <Card>
+            <Card data-tour="my-pay-history">
               <CardHeader>
                 <CardTitle className="text-base">Your pay history</CardTitle>
                 <CardDescription>Every change, with the reason.</CardDescription>
