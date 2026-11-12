@@ -25,6 +25,10 @@ import {
   UserCog,
   FileClock,
   Compass,
+  Flag,
+  House,
+  PenLine,
+  UserRound,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth, useSession } from "@/components/auth-provider";
@@ -111,6 +115,28 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   </nav>;
 }
 
+function CreatorNav({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+  const { user } = useSession();
+  const items = [
+    { href: "/creator", label: "Home", icon: House },
+    { href: "/creator/profile", label: "My profile", icon: UserRound },
+    { href: "/creator/studio", label: "Studio", icon: FileClock },
+    ...(user.role === "ADMIN" ? [{ href: "/creator/moderation", label: "Moderation", icon: Flag }] : []),
+  ];
+  return <nav aria-label="Creator Space" className="space-y-1 px-4 py-4">
+    {items.map(({ href, label, icon: Icon }) => {
+      const active = pathname === href || (href !== "/creator" && pathname.startsWith(href + "/"));
+      return <Link key={href} href={href} onClick={onNavigate} aria-current={active ? "page" : undefined}
+        className={cn("flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
+          active ? "bg-sidebar-primary text-[var(--highlight-foreground)]" : "text-sidebar-foreground/80 hover:bg-sidebar-accent")}>
+        <Icon className="h-5 w-5" aria-hidden="true" />{label}
+      </Link>;
+    })}
+    <Button asChild className="mt-4 w-full"><Link href="/creator/compose" onClick={onNavigate}><PenLine /> New post</Link></Button>
+  </nav>;
+}
+
 function Brand() {
   return (
     <div className="flex items-center gap-2.5 px-6 py-5">
@@ -181,6 +207,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, company } = useSession();
   const { logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const inCreator = pathname === "/creator" || pathname.startsWith("/creator/");
   const { theme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pwOpen, setPwOpen] = useState(false);
@@ -201,13 +229,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* desktop sidebar */}
       <aside className="fixed inset-y-0 z-40 hidden w-60 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
-        <Brand />
+        {inCreator ? <><Link href="/creator" className="px-6 py-7 text-lg font-semibold text-sidebar-foreground">Creator Space</Link><CreatorNav /></> : <><Brand />
         <SidebarNav />
         <div className="mx-4 mb-5 mt-auto rounded-2xl border border-sidebar-border p-4 text-sidebar-foreground">
           <Sparkles className="mb-3 h-5 w-5 text-sidebar-primary" aria-hidden="true" />
           <p className="text-sm font-medium">A little less admin.</p><p className="mt-1 text-xs text-sidebar-foreground/65">More room for your people.</p>
           <p className="mt-4 truncate border-t border-sidebar-border pt-3 text-xs text-sidebar-foreground/65">{company.name}</p>
-        </div>
+        </div></>}
       </aside>
 
       {/* mobile top bar */}
@@ -222,20 +250,28 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <span className="font-semibold text-sidebar-foreground">People &amp; Pay</span>
+        <span className="font-semibold text-sidebar-foreground">{inCreator ? "Creator Space" : "People & Pay"}</span>
       </div>
       <Dialog open={mobileOpen} onOpenChange={setMobileOpen}>
         <DialogContent className="inset-y-0 left-0 top-0 flex h-dvh max-h-none w-64 translate-x-0 translate-y-0 flex-col rounded-none border-0 bg-sidebar p-0 pt-2 text-sidebar-foreground">
-          <DialogHeader className="sr-only"><DialogTitle>Menu</DialogTitle><DialogDescription>Navigate the employee portal.</DialogDescription></DialogHeader>
-            <Brand />
-            <SidebarNav onNavigate={() => setMobileOpen(false)} />
+          <DialogHeader className="sr-only"><DialogTitle>Menu</DialogTitle><DialogDescription>Navigate this workspace.</DialogDescription></DialogHeader>
+          {inCreator ? <CreatorNav onNavigate={() => setMobileOpen(false)} /> : <>
+            <Brand /><SidebarNav onNavigate={() => setMobileOpen(false)} />
+          </>}
         </DialogContent>
       </Dialog>
 
       <div className="flex min-h-dvh min-w-0 w-full flex-col lg:pl-60">
         {/* top bar */}
         <header className="sticky top-14 z-30 mt-14 flex min-h-16 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur sm:px-6 lg:top-0 lg:mt-0 lg:px-8">
-          <div className="mr-auto min-w-0"><p className="eyebrow text-muted-foreground">Workspace</p><p className="truncate text-xs text-muted-foreground">{company.name}</p></div>
+          <div className="mr-auto min-w-0"><p className="eyebrow text-muted-foreground">{inCreator ? "Creator Space" : "Workspace"}</p><p className="truncate text-xs text-muted-foreground">{company.name}</p></div>
+          {process.env.NEXT_PUBLIC_CREATOR_SPACE_ENABLED === "true" && (
+            <Button asChild variant="outline" size="sm">
+              <Link href={inCreator ? "/dashboard" : "/creator"}>
+                {inCreator ? "Work Portal" : "Creator Space"}
+              </Link>
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -260,9 +296,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div className="text-xs font-normal text-muted-foreground">Role: {user.role}</div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem disabled={!tour.available} onSelect={()=>setTimeout(tour.replay,0)}>
+              {!inCreator && <DropdownMenuItem disabled={!tour.available} onSelect={()=>setTimeout(tour.replay,0)}>
                 <Compass /> Take the tour again
-              </DropdownMenuItem>
+              </DropdownMenuItem>}
               <DropdownMenuItem onSelect={() => setPwOpen(true)}>
                 <KeyRound /> Change password
               </DropdownMenuItem>

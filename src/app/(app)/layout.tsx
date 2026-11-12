@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/components/auth-provider";
 import { AppShell } from "@/components/app-shell";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { TourProvider } from "@/tours/tour-provider";
 import { AssistantLauncher } from "@/components/assistant/assistant-launcher";
@@ -11,6 +11,8 @@ import "@/components/assistant/assistant.css";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const creator = pathname === "/creator" || pathname.startsWith("/creator/");
 
   useEffect(() => {
     if (auth.status === "anonymous") router.replace("/login");
@@ -25,5 +27,5 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <TourProvider><AppShell>{children}</AppShell><AssistantLauncher /></TourProvider>;
+  return <TourProvider><AppShell>{children}</AppShell>{!creator && <AssistantLauncher />}</TourProvider>;
 }
