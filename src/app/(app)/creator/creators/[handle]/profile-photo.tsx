@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { completeImage, imageTypes, reserveImage, uploadDirect, validImage } from "../../direct-image";
+import { ResilientImage } from "../../cloud-image";
 
 const path = "/creator/profile/avatar";
 
@@ -35,8 +36,7 @@ export function ProfilePhoto({ profile, onChange }: {
   return <div className="-mt-10 space-y-2 sm:-mt-12">
     <div className="flex size-20 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-primary/15 text-2xl font-semibold text-primary sm:size-24">
       {profile.avatar ? (
-        // eslint-disable-next-line @next/next/no-img-element -- Cloudinary handles authenticated delivery.
-        <img src={profile.avatar} alt="" width={96} height={96} className="size-full object-cover" />
+        <ResilientImage key={profile.avatar} src={profile.avatar} alt="" width={96} height={96} className="size-full object-cover" />
       ) : <span aria-hidden="true">{profile.displayName.trim().slice(0, 1).toUpperCase()}</span>}
     </div>
     {profile.mine && <>

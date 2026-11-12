@@ -56,6 +56,9 @@ export function CreatorProfile({ handle }: { handle: string }) {
           <h1 className="break-words text-[clamp(1.75rem,4vw,2.75rem)] font-semibold tracking-tight">{profile.displayName}</h1>
           <p className="text-sm text-muted-foreground">@{profile.handle} · {profile.followers} {profile.followers === 1 ? "follower" : "followers"}</p>
           {profile.bio && <p className="whitespace-pre-wrap break-words">{profile.bio}</p>}
+          {!profile.mine && !profile.canFollow && <Link href="/creator/profile/edit" className="text-sm text-primary underline">
+            Set up your creator profile to follow
+          </Link>}
         </div>
       </header>
       <CreatorPosts canWrite={false} handle={profile.handle} />

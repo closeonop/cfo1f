@@ -120,6 +120,7 @@ function CreatorNav({ onNavigate }: { onNavigate?: () => void }) {
   const { user } = useSession();
   const items = [
     { href: "/creator", label: "Home", icon: House },
+    { href: "/creator/people", label: "People", icon: Users },
     { href: "/creator/profile", label: "My profile", icon: UserRound },
     { href: "/creator/studio", label: "Studio", icon: FileClock },
     ...(user.role === "ADMIN" ? [{ href: "/creator/moderation", label: "Moderation", icon: Flag }] : []),

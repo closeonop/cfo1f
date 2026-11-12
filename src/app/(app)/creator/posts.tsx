@@ -135,7 +135,9 @@ export function CreatorPosts({ canWrite, handle, studioMode = false }: { canWrit
       {!page && !error && <p role="status" className="text-sm text-muted-foreground">Loading posts…</p>}
       {!page && error && <Button variant="outline" onClick={() => { setError(""); setRevision((value) => value + 1); }}>Try again</Button>}
       {page?.items.length === 0 && <p className="text-sm text-muted-foreground">
-        {studio ? "You have no posts yet." : view === "following" ? "No posts from creators you follow yet." : "No posts have been published yet."}
+        {studio ? "You have no posts yet." : view === "following" ? <>
+          No posts from creators you follow yet. <Link className="text-primary underline" href="/creator/people">Find people to follow</Link>
+        </> : "No posts have been published yet."}
       </p>}
       {page?.items.map((post) => <article key={post.id} className="space-y-3 rounded-2xl border bg-card p-5 sm:p-6">
         <h3 className="break-words text-lg font-semibold"><Link className="hover:underline" href={`/creator/posts/${post.id}`}>{post.title}</Link></h3>
