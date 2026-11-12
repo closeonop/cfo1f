@@ -1,3 +1,7 @@
+"use client";
+
+import { useState, type ComponentProps } from "react";
+
 export type CloudImageData = {
   id: string; alt: string; width: number; height: number; small: string; medium: string; large: string;
 };
@@ -9,10 +13,6 @@ export function CloudImage({ image }: { image: CloudImageData }) {
     sizes="(max-width: 768px) 92vw, 720px" alt={image.alt} width={image.width} height={image.height}
     loading="lazy" className="h-auto max-h-[70vh] w-full rounded-2xl border bg-card object-contain" />;
 }
-"use client";
-
-import { useState, type ComponentProps } from "react";
-
 
 export function ResilientImage({ src, srcSet, alt, ...props }: ComponentProps<"img"> & { src: string; alt: string }) {
   const [fallback, setFallback] = useState<string>();
